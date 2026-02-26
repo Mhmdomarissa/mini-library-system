@@ -1,4 +1,5 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import type { Document } from 'mongoose';
+import { Schema, model } from 'mongoose';
 
 export type UserRole = 'admin' | 'librarian' | 'member';
 
@@ -15,12 +16,12 @@ export interface IUser extends Document {
 const userSchema = new Schema<IUser>(
   {
     firebaseUid: { type: String, required: true, unique: true },
-    name:        { type: String, required: true },
-    email:       { type: String, required: true, unique: true },
-    role:        { type: String, enum: ['admin', 'librarian', 'member'], default: 'member' },
-    isActive:    { type: Boolean, default: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    role: { type: String, enum: ['admin', 'librarian', 'member'], default: 'member' },
+    isActive: { type: Boolean, default: true },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userSchema.index({ role: 1 });

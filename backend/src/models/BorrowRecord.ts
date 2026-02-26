@@ -1,4 +1,5 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import type { Document, Types } from 'mongoose';
+import { Schema, model } from 'mongoose';
 
 export type BorrowStatus = 'borrowed' | 'returned' | 'overdue';
 
@@ -15,14 +16,14 @@ export interface IBorrowRecord extends Document {
 
 const borrowRecordSchema = new Schema<IBorrowRecord>(
   {
-    userId:     { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    bookId:     { type: Schema.Types.ObjectId, ref: 'Book', required: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    bookId: { type: Schema.Types.ObjectId, ref: 'Book', required: true },
     borrowedAt: { type: Date, required: true, default: Date.now },
-    dueDate:    { type: Date, required: true },
+    dueDate: { type: Date, required: true },
     returnedAt: { type: Date, default: null },
-    status:     { type: String, enum: ['borrowed', 'returned', 'overdue'], default: 'borrowed' },
+    status: { type: String, enum: ['borrowed', 'returned', 'overdue'], default: 'borrowed' },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 borrowRecordSchema.index({ userId: 1 });

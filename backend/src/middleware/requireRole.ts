@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { UserRole } from '../models/User';
+import type { Request, Response, NextFunction } from 'express';
+import type { UserRole } from '../models/User';
 import logger from '../utils/logger';
 
 export const requireRole = (allowedRoles: UserRole[]) => {
@@ -11,7 +11,7 @@ export const requireRole = (allowedRoles: UserRole[]) => {
 
     if (!allowedRoles.includes(req.user.role)) {
       logger.warn(
-        `Access denied for user ${req.user.email} with role ${req.user.role}. Required: ${allowedRoles.join(', ')}`
+        `Access denied for user ${req.user.email} with role ${req.user.role}. Required: ${allowedRoles.join(', ')}`,
       );
       res.status(403).json({ message: 'Forbidden: Insufficient permissions' });
       return;
