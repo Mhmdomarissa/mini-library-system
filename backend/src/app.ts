@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import { AppError } from './utils/AppError';
 import { sendError } from './utils/response';
 import logger from './utils/logger';
+import bookRoutes from './routes/book.routes';
 
 const app: Application = express();
 
@@ -19,7 +20,8 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ success: true, data: { status: 'ok' } });
 });
 
-// Routes will be registered here
+// API Routes
+app.use('/api/books', bookRoutes);
 
 // 404 handler — must be registered AFTER all routes
 app.use((_req: Request, res: Response) => {
