@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { ZodSchema } from 'zod';
+import type { ZodSchema, ZodIssue } from 'zod';
 import { ZodError } from 'zod';
 
 type ValidateTarget = 'body' | 'query' | 'params';
@@ -31,7 +31,7 @@ export const validate = (schema: ZodSchema, target: ValidateTarget = 'body') => 
         if (error instanceof ZodError) {
           res.status(400).json({
             message: 'Validation error',
-            errors: error.errors.map((e) => ({
+            errors: error.issues.map((e: ZodIssue) => ({
               field: e.path.join('.') || target,
               message: e.message,
             })),

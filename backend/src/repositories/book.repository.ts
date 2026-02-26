@@ -1,4 +1,4 @@
-import type { FilterQuery, Types } from 'mongoose';
+import { type Types, type QueryFilter } from 'mongoose';
 import { Book } from '../models/Book';
 import type { IBook, BookStatus } from '../models/Book';
 import type { CreateBookInput, UpdateBookInput } from '../utils/validationSchemas';
@@ -53,7 +53,7 @@ export class BookRepository {
     filters: BookFilters,
     pagination: PaginationParams,
   ): Promise<PaginatedResult<IBook>> {
-    const query: FilterQuery<IBook> = { isDeleted: false };
+    const query: QueryFilter<IBook> = { isDeleted: false };
 
     // Full-text search on title / author / description (weighted text index)
     if (filters.search?.trim()) {

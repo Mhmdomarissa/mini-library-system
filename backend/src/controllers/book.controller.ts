@@ -29,17 +29,20 @@ export const list = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const getById = async (req: Request, res: Response): Promise<void> => {
-  const book = await bookService.getById(req.params.id);
+  const { id } = req.params as { id: string };
+  const book = await bookService.getById(id);
   sendSuccess(res, { book });
 };
 
 export const update = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params as { id: string };
   const body = req.body as UpdateBookInput;
-  const book = await bookService.update(req.params.id, body, req.user!._id);
+  const book = await bookService.update(id, body, req.user!._id);
   sendSuccess(res, { book });
 };
 
 export const remove = async (req: Request, res: Response): Promise<void> => {
-  await bookService.softDelete(req.params.id, req.user!._id);
+  const { id } = req.params as { id: string };
+  await bookService.softDelete(id, req.user!._id);
   sendSuccess(res, null);
 };
