@@ -19,10 +19,25 @@ app.get('/health', (_req, res) => {
 
 // Routes will be registered here
 
-// Global error handler
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  logger.error(err.message, { stack: err.stack });
-  res.status(500).json({ message: 'Internal server error' });
+// 404 handler — must be registered AFTER all routes
+app.use((_req: Request, res: Response) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
+// Global error handler — must be LAST middleware (4-arg signature required)
+// Uses `unknown` because Express 5 can throw non-Error values
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof Error) {
+    logger.error(err.message, { stack: err.stack });
+    // Propagate status code set by upstream (e.g. createError)
+    const status = (err as Error & { status?: number }).status ?? 500;
+    res.status(status).json({
+      message: status < 500 ? err.message : 'Internal server error',
+    });
+  } else {
+    logger.error('Unknown error thrown', { err });
+    res.status(500).json({ message: 'Internal server error' });
+  }
 });
 
 export default app;
