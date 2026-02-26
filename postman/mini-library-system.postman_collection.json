@@ -1,0 +1,515 @@
+{
+  "info": {
+    "name": "Mini Library System — Book API",
+    "_postman_id": "mini-library-system-book-api",
+    "description": "Full test suite for the Mini Library System backend.\n\n**Setup:** Import this collection AND `mini-library-system.postman_environment.json`.\n\nThe collection auto-refreshes the Firebase token before each request — you never need to copy-paste tokens manually.\n\nRun all 11 tests in order using the **Collection Runner** (▶ button).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "admin_token",  "value": "", "type": "string" },
+    { "key": "member_token", "value": "", "type": "string" },
+    { "key": "book_id",      "value": "", "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-refresh admin token before every request",
+          "const apiKey   = pm.environment.get('firebase_api_key');",
+          "const email    = pm.environment.get('admin_email');",
+          "const password = pm.environment.get('admin_password');",
+          "",
+          "if (!apiKey || !email || !password) return;",
+          "",
+          "pm.sendRequest({",
+          "  url: `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,",
+          "  method: 'POST',",
+          "  header: { 'Content-Type': 'application/json' },",
+          "  body: { mode: 'raw', raw: JSON.stringify({ email, password, returnSecureToken: true }) }",
+          "}, (err, res) => {",
+          "  if (!err && res.code === 200) {",
+          "    pm.collectionVariables.set('admin_token', res.json().idToken);",
+          "  }",
+          "});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Sign Up (run once)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "if (json.idToken) {",
+                  "  pm.collectionVariables.set('admin_token', json.idToken);",
+                  "  pm.test('idToken present', () => pm.expect(json.idToken).to.be.a('string'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\",\n  \"returnSecureToken\": true\n}"
+            },
+            "url": {
+              "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={{firebase_api_key}}",
+              "host": ["identitytoolkit.googleapis.com"],
+              "path": ["v1", "accounts:signUp"],
+              "query": [{ "key": "key", "value": "{{firebase_api_key}}" }]
+            },
+            "description": "Creates the test user. Run only once — will fail with EMAIL_EXISTS on subsequent runs (that's fine, just skip it)."
+          }
+        },
+        {
+          "name": "Sign In → get token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('idToken present', () => pm.expect(json.idToken).to.be.a('string'));",
+                  "pm.collectionVariables.set('admin_token', json.idToken);",
+                  "console.log('✅ Token saved to collection variable admin_token');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\",\n  \"returnSecureToken\": true\n}"
+            },
+            "url": {
+              "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{firebase_api_key}}",
+              "host": ["identitytoolkit.googleapis.com"],
+              "path": ["v1", "accounts:signInWithPassword"],
+              "query": [{ "key": "key", "value": "{{firebase_api_key}}" }]
+            },
+            "description": "Signs in and saves the idToken to {{admin_token}}. Run this any time your token expires (1h)."
+          }
+        },
+        {
+          "name": "Sign In as Member → get token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('idToken present', () => pm.expect(json.idToken).to.be.a('string'));",
+                  "pm.collectionVariables.set('member_token', json.idToken);",
+                  "console.log('✅ Member token saved');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{member_email}}\",\n  \"password\": \"{{member_password}}\",\n  \"returnSecureToken\": true\n}"
+            },
+            "url": {
+              "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{firebase_api_key}}",
+              "host": ["identitytoolkit.googleapis.com"],
+              "path": ["v1", "accounts:signInWithPassword"],
+              "query": [{ "key": "key", "value": "{{firebase_api_key}}" }]
+            },
+            "description": "Signs in as a member user (role: member). Used in the 403 test."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📚 Books",
+      "item": [
+        {
+          "name": "TEST 01 — 401 No Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "pm.test('Error message present', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.message).to.include('Unauthorized');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/books",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books"]
+            },
+            "description": "No Authorization header → must return 401.\n\nProves: auth middleware rejects requests without a token."
+          }
+        },
+        {
+          "name": "TEST 02 — 403 Wrong Role (member)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Override collection-level prerequest: use member token, not admin",
+                  "// Member token must already be in {{member_token}} from the Sign In as Member request"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403 Forbidden', () => pm.response.to.have.status(403));",
+                  "pm.test('Forbidden message', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.message).to.include('Forbidden');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Forbidden Book\",\n  \"author\": \"Test\",\n  \"isbn\": \"000-0000000000\",\n  \"genre\": \"Technology\",\n  \"publishedYear\": 2020,\n  \"totalCopies\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/books",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books"]
+            },
+            "description": "Member token on a create-book endpoint → must return 403.\n\nProves: requireRole(['admin','librarian']) guard works."
+          }
+        },
+        {
+          "name": "TEST 03 — 400 Validation Error",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Validation errors array present', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.message).to.equal('Validation error');",
+                  "  pm.expect(json.errors).to.be.an('array').with.length.above(0);",
+                  "});",
+                  "pm.test('Missing fields reported', () => {",
+                  "  const fields = pm.response.json().errors.map(e => e.field);",
+                  "  pm.expect(fields).to.include.members(['author', 'isbn', 'genre', 'publishedYear', 'totalCopies']);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Only Title — missing all other required fields\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/books",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books"]
+            },
+            "description": "Body has only `title`, missing author/isbn/genre/publishedYear/totalCopies → Zod returns 400 with an errors array listing every missing field."
+          }
+        },
+        {
+          "name": "TEST 04 — 201 Create Book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
+                  "pm.test('Book returned with _id', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.book._id).to.be.a('string');",
+                  "  pm.expect(json.data.book.title).to.equal('Clean Code');",
+                  "  pm.expect(json.data.book.status).to.equal('available');",
+                  "  pm.expect(json.data.book.availableCopies).to.equal(5);",
+                  "  // Save the ID for subsequent tests",
+                  "  pm.collectionVariables.set('book_id', json.data.book._id);",
+                  "  console.log('✅ book_id saved:', json.data.book._id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Clean Code\",\n  \"author\": \"Robert C. Martin\",\n  \"isbn\": \"978-0132350884\",\n  \"genre\": \"Technology\",\n  \"description\": \"A handbook of agile software craftsmanship\",\n  \"publishedYear\": 2008,\n  \"totalCopies\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/books",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books"]
+            },
+            "description": "Admin creates a book with all required fields → 201 with full book object.\n\nThe `_id` is automatically saved to `{{book_id}}` for tests 06–11."
+          }
+        },
+        {
+          "name": "TEST 05 — 200 List Books",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Books array and pagination present', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.books).to.be.an('array');",
+                  "  pm.expect(json.data.pagination).to.have.all.keys(",
+                  "    'page','limit','totalItems','totalPages','hasNextPage','hasPrevPage'",
+                  "  );",
+                  "});",
+                  "pm.test('Pagination defaults correct', () => {",
+                  "  pm.expect(pm.response.json().data.pagination.page).to.equal(1);",
+                  "  pm.expect(pm.response.json().data.pagination.limit).to.equal(10);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/books?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "genre",  "value": "", "disabled": true },
+                { "key": "status", "value": "", "disabled": true }
+              ]
+            },
+            "description": "Returns paginated list of all non-deleted books.\n\nOptional query params (enable them to test filtering):\n- `search` — full-text search across title/author/description\n- `genre` — exact match\n- `status` — available | out_of_stock | archived"
+          }
+        },
+        {
+          "name": "TEST 06 — 200 Get Book by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Correct book returned', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.book._id).to.equal(pm.collectionVariables.get('book_id'));",
+                  "  pm.expect(json.data.book.title).to.equal('Clean Code');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/books/{{book_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books", "{{book_id}}"]
+            },
+            "description": "Fetch single book by its MongoDB `_id` (captured from TEST 04)."
+          }
+        },
+        {
+          "name": "TEST 07 — 404 Book Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+                  "pm.test('Not found message', () => {",
+                  "  pm.expect(pm.response.json().message).to.include('not found');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/books/000000000000000000000000",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books", "000000000000000000000000"]
+            },
+            "description": "A valid-format but non-existent MongoDB ObjectId → 404.\n\nProves: service throws AppError.notFound() which the global error handler maps to 404."
+          }
+        },
+        {
+          "name": "TEST 08 — 200 Update Book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Updated fields reflected', () => {",
+                  "  const book = pm.response.json().data.book;",
+                  "  pm.expect(book.description).to.equal('Updated by Postman test');",
+                  "  pm.expect(book.totalCopies).to.equal(10);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated by Postman test\",\n  \"totalCopies\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/books/{{book_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books", "{{book_id}}"]
+            },
+            "description": "Partial update — only provided fields are changed, others remain intact.\n\nProves: PATCH correctly applies partial updates via `$set`."
+          }
+        },
+        {
+          "name": "TEST 09 — 409 Duplicate ISBN",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 409 Conflict', () => pm.response.to.have.status(409));",
+                  "pm.test('Conflict message mentions ISBN', () => {",
+                  "  pm.expect(pm.response.json().message).to.include('978-0132350884');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Clean Code — Duplicate\",\n  \"author\": \"Robert C. Martin\",\n  \"isbn\": \"978-0132350884\",\n  \"genre\": \"Technology\",\n  \"publishedYear\": 2008,\n  \"totalCopies\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/books",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books"]
+            },
+            "description": "Same ISBN as the book created in TEST 04 → 409 Conflict.\n\nProves: service-level ISBN uniqueness check throws AppError.conflict()."
+          }
+        },
+        {
+          "name": "TEST 10 — 200 Delete Book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', () => pm.response.to.have.status(200));",
+                  "pm.test('Success with null data', () => {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data).to.be.null;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/books/{{book_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books", "{{book_id}}"]
+            },
+            "description": "Soft-deletes the book (sets isDeleted:true, records deletedAt).\n\nThe document stays in MongoDB but is hidden from all GET endpoints."
+          }
+        },
+        {
+          "name": "TEST 11 — 404 Get Deleted Book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 Not Found', () => pm.response.to.have.status(404));",
+                  "pm.test('Book hidden after soft-delete', () => {",
+                  "  pm.expect(pm.response.json().message).to.include('not found');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/books/{{book_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "books", "{{book_id}}"]
+            },
+            "description": "Same ID as TEST 10 — now returns 404 because the book is soft-deleted.\n\nProves: soft-delete hides the book from all read paths (isDeleted:false filter)."
+          }
+        }
+      ]
+    }
+  ]
+}
