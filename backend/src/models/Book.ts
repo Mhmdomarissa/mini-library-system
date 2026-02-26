@@ -25,7 +25,7 @@ const bookSchema = new Schema<IBook>(
   {
     title: { type: String, required: true },
     author: { type: String, required: true },
-    isbn: { type: String, required: true, unique: true },
+    isbn: { type: String, required: true },
     genre: { type: String, required: true },
     description: { type: String, default: '' },
     publishedYear: { type: Number, required: true },
@@ -52,6 +52,9 @@ bookSchema.index({ genre: 1 });
 bookSchema.index({ status: 1 });
 // Compound: status + genre for filtered catalog pages
 bookSchema.index({ status: 1, genre: 1 });
+// Partial unique index on ISBN — only enforced for non-deleted documents,
+// so a soft-deleted book's ISBN can be reused by a new book.
+bookSchema.index({ isbn: 1 }, { unique: true, partialFilterExpression: { isDeleted: false } });
 // isbn unique is enforced at field level (unique: true) — no extra index needed
 
 export const Book = model<IBook>('Book', bookSchema);

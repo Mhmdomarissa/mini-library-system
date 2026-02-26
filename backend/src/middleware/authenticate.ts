@@ -36,7 +36,7 @@ export const authenticate = async (
           isActive: true,
         },
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true },
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
     );
 
     if (!user) {

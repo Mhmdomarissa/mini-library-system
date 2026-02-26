@@ -18,13 +18,21 @@ export const create = async (req: Request, res: Response): Promise<void> => {
 };
 
 export const list = async (req: Request, res: Response): Promise<void> => {
-  const { page, limit, search, genre, status } = req.query as unknown as ListBooksQuery;
+  // req.query is a getter in Express and is not writable, so we parse
+  // directly rather than relying on the Zod middleware having replaced it.
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 10));
+  const search = typeof req.query.search === 'string' ? req.query.search : undefined;
+  const genre = typeof req.query.genre === 'string' ? req.query.genre : undefined;
+  const status =
+    typeof req.query.status === 'string'
+      ? (req.query.status as ListBooksQuery['status'])
+      : undefined;
 
   const filters: BookFilters = { search, genre, status };
   const pagination = { page, limit, skip: (page - 1) * limit };
 
   const result = await bookService.list(filters, pagination);
-
   sendSuccess(res, { books: result.items, pagination: result.pagination });
 };
 

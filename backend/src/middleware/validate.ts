@@ -24,7 +24,15 @@ export const validate = (schema: ZodSchema, target: ValidateTarget = 'body') => 
       .then((parsed) => {
         // Replace with the Zod-coerced/stripped version so controllers get
         // clean, type-safe data and no extra fields leak through.
-        (req as Request & Record<string, unknown>)[target] = parsed;
+        // NOTE: req.query is a read-only getter in Express 5 — the assignment
+        // is silently ignored for 'query' targets; controllers must read
+        // directly from req.query using Number() / String() coercion.
+        try {
+          (req as Request & Record<string, unknown>)[target] = parsed;
+        } catch {
+          // read-only property (e.g. req.query in Express 5) — safe to ignore;
+          // validation already ran and next() will be called below.
+        }
         next();
       })
       .catch((error: unknown) => {

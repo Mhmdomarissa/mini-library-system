@@ -93,7 +93,7 @@ export class BookRepository {
     return Book.findOneAndUpdate(
       { _id: id, isDeleted: false },
       { $set: data },
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     );
   }
 
@@ -105,7 +105,7 @@ export class BookRepository {
     return Book.findOneAndUpdate(
       { _id: id, isDeleted: false },
       { $set: { isDeleted: true, deletedAt: new Date(), updatedBy: deletedBy } },
-      { new: true },
+      { returnDocument: 'after' },
     );
   }
 }
