@@ -1,10 +1,11 @@
-import express, { Application } from 'express';
+import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import logger from './utils/logger';
 
 const app: Application = express();
 
-// Middleware
+// Security middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
@@ -16,5 +17,11 @@ app.get('/health', (_req, res) => {
 });
 
 // Routes will be registered here
+
+// Global error handler
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+  logger.error(err.message, { stack: err.stack });
+  res.status(500).json({ message: 'Internal server error' });
+});
 
 export default app;
