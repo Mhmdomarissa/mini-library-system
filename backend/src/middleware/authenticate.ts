@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import admin from '../config/firebase';
+import getFirebaseAdmin from '../config/firebase';
 import { User } from '../models/User';
 import logger from '../utils/logger';
 
@@ -18,7 +18,7 @@ export const authenticate = async (
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = await admin.auth().verifyIdToken(token);
+    const decoded = await getFirebaseAdmin().auth().verifyIdToken(token);
 
     // Use atomic findOneAndUpdate (upsert) to eliminate the find → create
     // race condition. Two concurrent first-logins for the same UID will both
