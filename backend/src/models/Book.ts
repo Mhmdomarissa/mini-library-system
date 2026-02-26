@@ -40,10 +40,18 @@ const bookSchema = new Schema<IBook>(
   { timestamps: true },
 );
 
-// Text indexes for search
-bookSchema.index({ title: 'text', author: 'text' });
-// Regular indexes
+// Compound text index — only ONE text index allowed per collection
+bookSchema.index(
+  { title: 'text', author: 'text', description: 'text' },
+  { weights: { title: 10, author: 5, description: 1 } },
+);
+// Soft-delete filter — virtually every query includes isDeleted: false
+bookSchema.index({ isDeleted: 1 });
+// Common list/filter queries
 bookSchema.index({ genre: 1 });
 bookSchema.index({ status: 1 });
+// Compound: status + genre for filtered catalog pages
+bookSchema.index({ status: 1, genre: 1 });
+// isbn unique is enforced at field level (unique: true) — no extra index needed
 
 export const Book = model<IBook>('Book', bookSchema);

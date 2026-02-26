@@ -29,6 +29,7 @@ const borrowRecordSchema = new Schema<IBorrowRecord>(
 borrowRecordSchema.index({ userId: 1 });
 borrowRecordSchema.index({ bookId: 1 });
 borrowRecordSchema.index({ status: 1 });
-borrowRecordSchema.index({ userId: 1, status: 1 }); // compound
+borrowRecordSchema.index({ userId: 1, status: 1 }); // compound: my borrows by status
+borrowRecordSchema.index({ dueDate: 1, status: 1 }); // compound: overdue detection query
 
 export const BorrowRecord = model<IBorrowRecord>('BorrowRecord', borrowRecordSchema);

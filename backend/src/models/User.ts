@@ -25,5 +25,6 @@ const userSchema = new Schema<IUser>(
 );
 
 userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 }); // fast deactivated-user filtering on every authenticated request
 
 export const User = model<IUser>('User', userSchema);

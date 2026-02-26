@@ -20,17 +20,29 @@ export const authenticate = async (
   try {
     const decoded = await admin.auth().verifyIdToken(token);
 
-    let user = await User.findOne({ firebaseUid: decoded.uid });
+    // Use atomic findOneAndUpdate (upsert) to eliminate the find → create
+    // race condition. Two concurrent first-logins for the same UID will both
+    // hit this path; MongoDB guarantees only one document is created.
+    // SECURITY: role is NEVER taken from the token — always defaults to 'member'.
+    const user = await User.findOneAndUpdate(
+      { firebaseUid: decoded.uid },
+      {
+        $setOnInsert: {
+          firebaseUid: decoded.uid,
+          // Only trust email/name from the verified Firebase token, never from req.body
+          email: decoded.email ?? '',
+          name: decoded.name?.trim() || decoded.email || 'Unknown',
+          role: 'member', // hard-coded — client can never influence this
+          isActive: true,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
 
     if (!user) {
-      user = await User.create({
-        firebaseUid: decoded.uid,
-        email: decoded.email ?? '',
-        name: decoded.name ?? decoded.email ?? 'Unknown',
-        role: 'member',
-        isActive: true,
-      });
-      logger.info(`New user created: ${user.email}`);
+      // Should never happen after a successful upsert, but guard anyway
+      res.status(500).json({ message: 'Internal server error' });
+      return;
     }
 
     if (!user.isActive) {
@@ -41,7 +53,9 @@ export const authenticate = async (
     req.user = user;
     next();
   } catch (error) {
-    logger.error('Authentication failed:', error);
+    // Log only the error message — never log the raw token or decoded payload
+    const message = error instanceof Error ? error.message : 'Unknown auth error';
+    logger.warn('Authentication failed', { message });
     res.status(401).json({ message: 'Unauthorized: Invalid token' });
   }
 };
