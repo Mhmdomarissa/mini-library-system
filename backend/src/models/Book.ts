@@ -19,6 +19,8 @@ export interface IBook extends Document {
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  /** OpenAI text-embedding-3-small vector (1536-dim). Excluded from all standard queries via select:false. */
+  embedding?: number[];
 }
 
 const bookSchema = new Schema<IBook>(
@@ -36,6 +38,14 @@ const bookSchema = new Schema<IBook>(
     updatedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null },
+    // ── Semantic search vector ────────────────────────────────────────────
+    // OpenAI text-embedding-3-small output (1536 floats).
+    // select:false → excluded from every query unless explicitly requested
+    //   with .select('+embedding'). Keeps payloads lean and prevents
+    //   accidental exposure of embeddings in public-facing responses.
+    // Not indexed — cosine similarity is computed in-memory in the service.
+    // Not required — existing books may lack an embedding until regenerated.
+    embedding: { type: [Number], required: false, select: false },
   },
   { timestamps: true },
 );
