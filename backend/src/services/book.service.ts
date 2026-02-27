@@ -5,6 +5,7 @@ import type { IBook } from '../models/Book';
 import type { CreateBookInput, UpdateBookInput } from '../utils/validationSchemas';
 import type { PaginationParams, PaginatedResult } from '../utils/pagination';
 import { AppError } from '../utils/AppError';
+import { generateEmbedding, buildEmbeddingInput } from './embedding.service';
 
 /**
  * BookService — business rules only.
@@ -15,6 +16,8 @@ import { AppError } from '../utils/AppError';
 export class BookService {
   /**
    * Create a book after enforcing ISBN uniqueness.
+   * Embedding is generated BEFORE the DB write so a failed OpenAI call
+   * cannot leave a book without an embedding.
    * availableCopies is derived from totalCopies — never trusted from input.
    */
   async create(data: CreateBookInput, createdBy: Types.ObjectId): Promise<IBook> {
@@ -23,7 +26,12 @@ export class BookService {
       throw AppError.conflict(`A book with ISBN "${data.isbn}" already exists`);
     }
 
-    return bookRepository.create(data, createdBy);
+    // Build and generate embedding before writing to DB.
+    // If OpenAI is unavailable this throws 503 — no partial book is created.
+    const embeddingInput = buildEmbeddingInput(data.title, data.author, data.description ?? '');
+    const embedding = await generateEmbedding(embeddingInput);
+
+    return bookRepository.create(data, createdBy, embedding);
   }
 
   /**
@@ -50,6 +58,8 @@ export class BookService {
    * - If ISBN changes, new ISBN must not already be in use
    * - availableCopies cannot exceed totalCopies
    * - If totalCopies decreases below availableCopies, cap availableCopies
+   * - Embedding is regenerated ONLY when title, author, or description change.
+   *   Unrelated field updates (genre, totalCopies, …) never call OpenAI.
    */
   async update(id: string, data: UpdateBookInput, updatedBy: Types.ObjectId): Promise<IBook> {
     const book = await bookRepository.findById(id);
@@ -70,9 +80,24 @@ export class BookService {
     const currentAvailable = book.availableCopies;
     const safeAvailable = Math.min(currentAvailable, newTotal);
 
+    // Re-generate embedding only when semantically-relevant text fields change.
+    // If none of title/author/description are in the update payload, skip OpenAI
+    // entirely — this is the key distinction between text and non-text updates.
+    let embedding: number[] | undefined;
+    if (data.title !== undefined || data.author !== undefined || data.description !== undefined) {
+      const embeddingInput = buildEmbeddingInput(
+        data.title ?? book.title,
+        data.author ?? book.author,
+        data.description ?? book.description,
+      );
+      // Throws 503 if OpenAI is unavailable — update is aborted, no partial write occurs.
+      embedding = await generateEmbedding(embeddingInput);
+    }
+
     const updated = await bookRepository.updateById(id, {
       ...data,
       ...(safeAvailable !== currentAvailable && { availableCopies: safeAvailable }),
+      ...(embedding && { embedding }),
       updatedBy,
     });
 
