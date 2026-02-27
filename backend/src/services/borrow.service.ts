@@ -195,6 +195,9 @@ export class BorrowService {
    * Member's own borrow history.
    * Status filter 'overdue' is resolved dynamically:
    *   status=borrowed + dueDate < now → computedStatus='overdue'
+   *
+   * Each record is enriched with `daysOverdue` and `fine` computed at
+   * query time — nothing is persisted to the DB.
    */
   async myHistory(
     userId: Types.ObjectId,
@@ -218,6 +221,9 @@ export class BorrowService {
   /**
    * Admin/librarian view of all borrows.
    * Supports filtering by userId, bookId, status, and overdue flag.
+   *
+   * Each record is enriched with `daysOverdue` and `fine` computed at
+   * query time — nothing is persisted to the DB.
    */
   async adminList(
     filters: BorrowFilters,
