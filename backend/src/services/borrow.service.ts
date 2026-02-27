@@ -186,7 +186,9 @@ export class BorrowService {
       // It does NOT need to be inside the transaction — it touches no DB state.
       return withFine(updated);
     } catch (err) {
-      await session.abortTransaction();
+      // .catch(() => {}) absorbs any "transaction not in progress" errors so the
+      // original error propagates cleanly rather than being masked by an abort error.
+      await session.abortTransaction().catch(() => {});
       if (err instanceof AppError) throw err;
       throw err;
     } finally {

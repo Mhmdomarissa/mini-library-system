@@ -11,6 +11,18 @@ const rateLimitHandler = (_req: Request, res: Response): void => {
 };
 
 /**
+ * skipInDev — bypass all rate limiters for localhost requests when not in
+ * production. This lets the full test suite (books + borrow + fine) run
+ * in a single 15-minute window without hitting the strict borrow cap.
+ * In production every request is counted regardless of origin.
+ */
+const skipInDev = (req: Request): boolean => {
+  if (process.env.NODE_ENV === 'production') return false;
+  const ip = req.ip ?? '';
+  return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+};
+
+/**
  * generalLimiter — applied to all /api/* routes.
  * 200 requests per IP per 15 minutes is generous for normal use
  * but stops naive scrapers and runaway clients.
@@ -20,6 +32,7 @@ export const generalLimiter = rateLimit({
   max: 200,
   standardHeaders: true, // Return RateLimit-* headers (RFC 6585)
   legacyHeaders: false,
+  skip: skipInDev,
   handler: rateLimitHandler,
 });
 
@@ -36,6 +49,7 @@ export const strictLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipInDev,
   handler: rateLimitHandler,
 });
 
@@ -49,5 +63,6 @@ export const adminLimiter = rateLimit({
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipInDev,
   handler: rateLimitHandler,
 });
