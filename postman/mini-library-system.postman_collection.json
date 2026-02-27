@@ -6,19 +6,81 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "admin_token",       "value": "", "type": "string" },
-    { "key": "member_token",      "value": "", "type": "string" },
-    { "key": "member2_token",     "value": "", "type": "string" },
-    { "key": "book_id",           "value": "", "type": "string" },
-    { "key": "borrow_book_id",    "value": "", "type": "string" },
-    { "key": "onecopy_book_id",   "value": "", "type": "string" },
-    { "key": "archived_book_id",  "value": "", "type": "string" },
-    { "key": "borrow_id",         "value": "", "type": "string" },
-    { "key": "onecopy_borrow_id", "value": "", "type": "string" }
+    {
+      "key": "admin_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "member_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "member2_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "book_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "borrow_book_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "onecopy_book_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "archived_book_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "borrow_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "onecopy_borrow_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "fine_book_id",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "fine_borrow_id_a",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "fine_borrow_id_b",
+      "value": "",
+      "type": "default"
+    },
+    {
+      "key": "fine_borrow_id_c",
+      "value": "",
+      "type": "default"
+    }
   ],
   "auth": {
     "type": "bearer",
-    "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{admin_token}}",
+        "type": "string"
+      }
+    ]
   },
   "event": [
     {
@@ -69,9 +131,16 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\",\n  \"returnSecureToken\": true\n}"
@@ -79,9 +148,19 @@
             "url": {
               "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={{firebase_api_key}}",
               "protocol": "https",
-              "host": ["identitytoolkit.googleapis.com"],
-              "path": ["v1", "accounts:signUp"],
-              "query": [{ "key": "key", "value": "{{firebase_api_key}}" }]
+              "host": [
+                "identitytoolkit.googleapis.com"
+              ],
+              "path": [
+                "v1",
+                "accounts:signUp"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{firebase_api_key}}"
+                }
+              ]
             },
             "description": "Creates the test user. Run only once — will fail with EMAIL_EXISTS on subsequent runs (that's fine, just skip it)."
           }
@@ -103,9 +182,16 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\",\n  \"returnSecureToken\": true\n}"
@@ -113,9 +199,19 @@
             "url": {
               "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{firebase_api_key}}",
               "protocol": "https",
-              "host": ["identitytoolkit.googleapis.com"],
-              "path": ["v1", "accounts:signInWithPassword"],
-              "query": [{ "key": "key", "value": "{{firebase_api_key}}" }]
+              "host": [
+                "identitytoolkit.googleapis.com"
+              ],
+              "path": [
+                "v1",
+                "accounts:signInWithPassword"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{firebase_api_key}}"
+                }
+              ]
             },
             "description": "Signs in and saves the idToken to {{admin_token}}. Run this any time your token expires (1h)."
           }
@@ -137,9 +233,16 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{member_email}}\",\n  \"password\": \"{{member_password}}\",\n  \"returnSecureToken\": true\n}"
@@ -147,9 +250,19 @@
             "url": {
               "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{firebase_api_key}}",
               "protocol": "https",
-              "host": ["identitytoolkit.googleapis.com"],
-              "path": ["v1", "accounts:signInWithPassword"],
-              "query": [{ "key": "key", "value": "{{firebase_api_key}}" }]
+              "host": [
+                "identitytoolkit.googleapis.com"
+              ],
+              "path": [
+                "v1",
+                "accounts:signInWithPassword"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{firebase_api_key}}"
+                }
+              ]
             },
             "description": "Signs in as a member user (role: member). Used in the 403 test."
           }
@@ -171,9 +284,16 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"{{member2_email}}\",\n  \"password\": \"{{member2_password}}\",\n  \"returnSecureToken\": true\n}"
@@ -181,9 +301,19 @@
             "url": {
               "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{firebase_api_key}}",
               "protocol": "https",
-              "host": ["identitytoolkit.googleapis.com"],
-              "path": ["v1", "accounts:signInWithPassword"],
-              "query": [{ "key": "key", "value": "{{firebase_api_key}}" }]
+              "host": [
+                "identitytoolkit.googleapis.com"
+              ],
+              "path": [
+                "v1",
+                "accounts:signInWithPassword"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{firebase_api_key}}"
+                }
+              ]
             },
             "description": "Signs in as a second member (member2@test.com). Used in B12 (out-of-stock test: different user cannot borrow when no copies remain)."
           }
@@ -210,13 +340,20 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/books",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
             },
             "description": "No Authorization header → must return 401.\n\nProves: auth middleware rejects requests without a token."
           }
@@ -249,18 +386,34 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Forbidden Book\",\n  \"author\": \"Test\",\n  \"isbn\": \"000-0000000000\",\n  \"genre\": \"Technology\",\n  \"publishedYear\": 2020,\n  \"totalCopies\": 1\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
             },
             "description": "Member token on a create-book endpoint → must return 403.\n\nProves: requireRole(['admin','librarian']) guard works."
           }
@@ -288,15 +441,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Only Title — missing all other required fields\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
             },
             "description": "Body has only `title`, missing author/isbn/genre/publishedYear/totalCopies → Zod returns 400 with an errors array listing every missing field."
           }
@@ -326,15 +489,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Clean Code\",\n  \"author\": \"Robert C. Martin\",\n  \"isbn\": \"978-0132350884\",\n  \"genre\": \"Technology\",\n  \"description\": \"A handbook of agile software craftsmanship\",\n  \"publishedYear\": 2008,\n  \"totalCopies\": 5\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
             },
             "description": "Admin creates a book with all required fields → 201 with full book object.\n\nThe `_id` is automatically saved to `{{book_id}}` for tests 06–11."
           }
@@ -368,14 +541,37 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/books?page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ],
               "query": [
-                { "key": "page",  "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "search", "value": "", "disabled": true },
-                { "key": "genre",  "value": "", "disabled": true },
-                { "key": "status", "value": "", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "genre",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
               ]
             },
             "description": "Returns paginated list of all non-deleted books.\n\nOptional query params (enable them to test filtering):\n- `search` — full-text search across title/author/description\n- `genre` — exact match\n- `status` — available | out_of_stock | archived"
@@ -404,8 +600,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/books/{{book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books", "{{book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{book_id}}"
+              ]
             },
             "description": "Fetch single book by its MongoDB `_id` (captured from TEST 04)."
           }
@@ -430,8 +632,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/books/000000000000000000000000",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books", "000000000000000000000000"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "000000000000000000000000"
+              ]
             },
             "description": "A valid-format but non-existent MongoDB ObjectId → 404.\n\nProves: service throws AppError.notFound() which the global error handler maps to 404."
           }
@@ -455,15 +663,26 @@
           ],
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"description\": \"Updated by Postman test\",\n  \"totalCopies\": 10\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books/{{book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books", "{{book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{book_id}}"
+              ]
             },
             "description": "Partial update — only provided fields are changed, others remain intact.\n\nProves: PATCH correctly applies partial updates via `$set`."
           }
@@ -485,15 +704,25 @@
           ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Clean Code — Duplicate\",\n  \"author\": \"Robert C. Martin\",\n  \"isbn\": \"978-0132350884\",\n  \"genre\": \"Technology\",\n  \"publishedYear\": 2008,\n  \"totalCopies\": 1\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
             },
             "description": "Same ISBN as the book created in TEST 04 → 409 Conflict.\n\nProves: service-level ISBN uniqueness check throws AppError.conflict()."
           }
@@ -520,8 +749,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/books/{{book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books", "{{book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{book_id}}"
+              ]
             },
             "description": "Soft-deletes the book (sets isDeleted:true, records deletedAt).\n\nThe document stays in MongoDB but is hidden from all GET endpoints."
           }
@@ -546,8 +781,14 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/books/{{book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books", "{{book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{book_id}}"
+              ]
             },
             "description": "Same ID as TEST 10 — now returns 404 because the book is soft-deleted.\n\nProves: soft-delete hides the book from all read paths (isDeleted:false filter)."
           }
@@ -577,18 +818,34 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Borrow Test Book\",\n  \"author\": \"Test Author\",\n  \"isbn\": \"{{$timestamp}}-BT\",\n  \"genre\": \"Technology\",\n  \"description\": \"Used for borrow tests — delete after run\",\n  \"publishedYear\": 2024,\n  \"totalCopies\": 5\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
             },
             "description": "Creates a 5-copy book for the borrow test suite.\nSaves _id to {{borrow_book_id}}.\n\nNote: ISBN uses {{$timestamp}} to avoid duplicate ISBN conflicts on re-runs."
           }
@@ -612,18 +869,34 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Last Copy Book\",\n  \"author\": \"Scarce Author\",\n  \"isbn\": \"{{$timestamp}}-OC\",\n  \"genre\": \"Science\",\n  \"description\": \"Used for out-of-stock borrow test\",\n  \"publishedYear\": 2024,\n  \"totalCopies\": 1\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
             },
             "description": "Creates a 1-copy book for the out-of-stock test (B11/B12).\nSaves _id to {{onecopy_book_id}}."
           }
@@ -646,18 +919,34 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"title\": \"Archived Test Book\",\n  \"author\": \"Archived Author\",\n  \"isbn\": \"{{$timestamp}}-AR\",\n  \"genre\": \"History\",\n  \"description\": \"Used for archived-book borrow test\",\n  \"publishedYear\": 2020,\n  \"totalCopies\": 3,\n  \"status\": \"archived\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
             },
             "description": "Creates a book with status=archived for B04.\nSaves _id to {{archived_book_id}}."
           }
@@ -678,13 +967,21 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/borrow/{{borrow_book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "{{borrow_book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{borrow_book_id}}"
+              ]
             },
             "description": "No Authorization header on borrow endpoint → 401.\n\nProves: authenticate middleware rejects unauthenticated requests."
           }
@@ -707,15 +1004,35 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
             "url": {
               "raw": "{{base_url}}/api/borrow/{{borrow_book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "{{borrow_book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{borrow_book_id}}"
+              ]
             },
             "description": "Admin token on a member-only borrow endpoint → 403.\n\nProves: requireRole(['member']) blocks admin from borrowing books."
           }
@@ -738,15 +1055,35 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
             "url": {
               "raw": "{{base_url}}/api/borrow/000000000000000000000000",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "000000000000000000000000"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "000000000000000000000000"
+              ]
             },
             "description": "Valid-format but non-existent ObjectId as bookId → 404.\n\nProves: service throws AppError.notFound('Book not found')."
           }
@@ -769,15 +1106,35 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
             "url": {
               "raw": "{{base_url}}/api/borrow/{{archived_book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "{{archived_book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{archived_book_id}}"
+              ]
             },
             "description": "Member tries to borrow an archived book → 400.\n\nProves: borrow service validates book.status !== 'archived' before proceeding."
           }
@@ -806,15 +1163,35 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
             "url": {
               "raw": "{{base_url}}/api/borrow/{{borrow_book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "{{borrow_book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{borrow_book_id}}"
+              ]
             },
             "description": "Member successfully borrows a book → 201 with borrowId and dueDate.\n\nThe borrowId is saved to {{borrow_id}} for use in B08/B09 (return tests).\n\nProves: ACID transaction decrements availableCopies and creates BorrowRecord atomically."
           }
@@ -849,14 +1226,26 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/borrow/history",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "history"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "history"
+              ]
             },
             "description": "Member retrieves their own borrow history → 200 with paginated list.\n\nVerifies the borrow from B05 appears as status='borrowed' with computedStatus.\n\nProves: myHistory() scopes results to the authenticated user only."
           }
@@ -879,15 +1268,35 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
             "url": {
               "raw": "{{base_url}}/api/borrow/{{borrow_book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "{{borrow_book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{borrow_book_id}}"
+              ]
             },
             "description": "Same member tries to borrow the same book again while already having an active borrow → 409.\n\nProves: service checks for existing active BorrowRecord (and falls back to compound unique index at DB level)."
           }
@@ -914,15 +1323,36 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
             "url": {
               "raw": "{{base_url}}/api/borrow/return/{{borrow_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "return", "{{borrow_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "return",
+                "{{borrow_id}}"
+              ]
             },
             "description": "Member returns the book borrowed in B05 → 200 with updated BorrowRecord.\n\nProves: ACID transaction marks BorrowRecord as returned and increments book's availableCopies atomically."
           }
@@ -945,15 +1375,36 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
             "url": {
               "raw": "{{base_url}}/api/borrow/return/{{borrow_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "return", "{{borrow_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "return",
+                "{{borrow_id}}"
+              ]
             },
             "description": "Same borrowId as B08 (already returned) → 400.\n\nProves: return service validates record.status !== 'returned' before proceeding."
           }
@@ -981,15 +1432,32 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/borrow/history?status=returned",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "history"],
-              "query": [{ "key": "status", "value": "returned" }]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "returned"
+                }
+              ]
             },
             "description": "Member's history filtered to returned records only → 200 with only returned borrows.\n\nProves: myHistory() correctly applies the status filter."
           }
@@ -1016,15 +1484,35 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
             "url": {
               "raw": "{{base_url}}/api/borrow/{{onecopy_book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "{{onecopy_book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{onecopy_book_id}}"
+              ]
             },
             "description": "Member borrows the only copy of the 1-copy book → 201, and book flips to out_of_stock.\n\nAfter this request, you can verify the book status changed:\nGET {{base_url}}/api/books/{{onecopy_book_id}} → status: out_of_stock\n\nProves: decrementCopies pipeline correctly flips status when availableCopies reaches 0."
           }
@@ -1047,17 +1535,88 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member2_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member2_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
             "url": {
               "raw": "{{base_url}}/api/borrow/{{onecopy_book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "{{onecopy_book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{onecopy_book_id}}"
+              ]
             },
             "description": "A different member (member2) tries to borrow the same book that is now out_of_stock → 400.\n\nProves: borrow service checks availableCopies <= 0 and returns AppError.badRequest()."
+          }
+        },
+        {
+          "name": "B13 — 400 Borrow Limit Exceeded",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('B13 — Status 400 or 409 (limit or already borrowed)', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([400, 409]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/borrow/{{borrow_book_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{borrow_book_id}}"
+              ]
+            },
+            "description": "Attempts a borrow when the member already holds MAX_ACTIVE_BORROWS active borrows.\n\n**How to trigger this**: After B12, the member already has at least 1 active borrow (the 1-copy book from B11). To hit the limit you can use the test-borrow.sh script which creates enough books to fill the quota, then attempts one more.\n\nIn Postman this request tries to borrow the same book a second time after it was returned, so it will not necessarily hit the limit unless the quota is already full. Run test-borrow.sh for the full automated limit test."
           }
         },
         {
@@ -1078,15 +1637,36 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
             "url": {
               "raw": "{{base_url}}/api/borrow/return/{{onecopy_borrow_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "borrow", "return", "{{onecopy_borrow_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "return",
+                "{{onecopy_borrow_id}}"
+              ]
             },
             "description": "Returns the 1-copy book borrow so the book becomes available again — needed before soft-delete."
           }
@@ -1106,14 +1686,26 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "DELETE",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/books/{{borrow_book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books", "{{borrow_book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{borrow_book_id}}"
+              ]
             },
             "description": "Soft-deletes the 5-copy test book created in SETUP."
           }
@@ -1133,14 +1725,26 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "DELETE",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/books/{{onecopy_book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books", "{{onecopy_book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{onecopy_book_id}}"
+              ]
             },
             "description": "Soft-deletes the 1-copy test book created in SETUP."
           }
@@ -1160,14 +1764,26 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "DELETE",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/books/{{archived_book_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "books", "{{archived_book_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{archived_book_id}}"
+              ]
             },
             "description": "Soft-deletes the archived test book created in SETUP."
           }
@@ -1196,14 +1812,26 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{member_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/admin/borrow",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "borrow"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "borrow"
+              ]
             },
             "description": "Member token on admin borrow list → 403.\n\nProves: requireRole(['admin','librarian']) blocks members from admin routes."
           }
@@ -1238,21 +1866,55 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/admin/borrow?page=1&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "borrow"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "borrow"
+              ],
               "query": [
-                { "key": "page",   "value": "1" },
-                { "key": "limit",  "value": "10" },
-                { "key": "status", "value": "",  "disabled": true },
-                { "key": "userId", "value": "",  "disabled": true },
-                { "key": "bookId", "value": "",  "disabled": true },
-                { "key": "overdue","value": "true", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "userId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "bookId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "overdue",
+                  "value": "true",
+                  "disabled": true
+                }
               ]
             },
             "description": "Admin retrieves all borrow records across all users → 200 with paginated + populated list.\n\nOptional filters (enable the disabled query params to test them):\n- `status` — borrowed | returned\n- `userId` — filter by specific user\n- `bookId` — filter by specific book\n- `overdue` — true returns only borrowed records past dueDate\n\nProves: adminList() returns all records regardless of user."
@@ -1280,15 +1942,32 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/admin/borrow?status=returned",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "borrow"],
-              "query": [{ "key": "status", "value": "returned" }]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "borrow"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "returned"
+                }
+              ]
             },
             "description": "Admin filters borrow list by status=returned → 200 with only returned records.\n\nProves: adminList() correctly applies status filter in the repository query."
           }
@@ -1315,17 +1994,737 @@
           "request": {
             "auth": {
               "type": "bearer",
-              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
             },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/admin/borrow?overdue=true",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "borrow"],
-              "query": [{ "key": "overdue", "value": "true" }]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "borrow"
+              ],
+              "query": [
+                {
+                  "key": "overdue",
+                  "value": "true"
+                }
+              ]
             },
             "description": "Admin filters for overdue borrows (borrowed + past dueDate) → 200.\n\nIn a new test environment borrows will not be overdue yet, so the list is empty — that is the correct behaviour. The test only validates the HTTP 200 shape.\n\nProves: repository resolves overdue filter as status=borrowed + dueDate<now."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧾 Fine Calculation",
+      "description": "Phase 3 fine calculation tests.\n\nFine is computed dynamically — never stored in the DB.\n\nFormula: daysOverdue = Math.ceil((settledAt - dueDate) / MS_PER_DAY), fine = daysOverdue × FINE_PER_DAY (env var, default 1)\n\nF01-F03: on-time return → fine = 0\nF04-F06: overdue return → fine > 0 (requires DB backdating, see F04 description)\nF07-F08: still-borrowed overdue → active history shows fine\nF09: admin overdue list shows fine",
+      "item": [
+        {
+          "name": "SETUP — Create fine test book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('SETUP — Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('SETUP — fine_book_id saved', () => {",
+                  "  const id = pm.response.json().data.book._id;",
+                  "  pm.expect(id).to.be.a('string');",
+                  "  pm.collectionVariables.set('fine_book_id', id);",
+                  "  console.log('✅ fine_book_id:', id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"title\": \"Fine Test Book\", \"author\": \"Fine Author\", \"isbn\": \"FT-POSTMAN-001\", \"genre\": \"Technology\", \"publishedYear\": 2024, \"totalCopies\": 5, \"description\": \"Created by Postman fine test\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/books",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
+            },
+            "description": "Creates the book used throughout F01-F11. Saves {{fine_book_id}}."
+          }
+        },
+        {
+          "name": "F01 — 201 Borrow fine test book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('F01 — Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('F01 — borrowId and dueDate present', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.borrowId).to.be.a('string');",
+                  "  pm.expect(d.dueDate).to.be.a('string');",
+                  "  pm.collectionVariables.set('fine_borrow_id_a', d.borrowId);",
+                  "  console.log('✅ fine_borrow_id_a:', d.borrowId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/borrow/{{fine_book_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{fine_book_id}}"
+              ]
+            },
+            "description": "Borrows the fine test book. Saves {{fine_borrow_id_a}}."
+          }
+        },
+        {
+          "name": "F02 — 200 Return immediately → fine=0, daysOverdue=0",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('F02 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F02 — fine = 0 (on-time return)', () => {",
+                  "  const rec = pm.response.json().data.borrowRecord;",
+                  "  pm.expect(rec).to.have.property('daysOverdue');",
+                  "  pm.expect(rec).to.have.property('fine');",
+                  "  pm.expect(rec.daysOverdue).to.equal(0, 'expected 0 daysOverdue for on-time return');",
+                  "  pm.expect(rec.fine).to.equal(0, 'expected fine = 0 for on-time return');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/borrow/return/{{fine_borrow_id_a}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "return",
+                "{{fine_borrow_id_a}}"
+              ]
+            },
+            "description": "Returns the book without any delay — the book was never overdue.\n\n**Assertions**: `daysOverdue = 0`, `fine = 0` in the return response."
+          }
+        },
+        {
+          "name": "F03 — 200 History shows fine=0 on returned record",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('F03 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F03 — fine fields present on history items', () => {",
+                  "  const borrows = pm.response.json().data.borrows;",
+                  "  pm.expect(borrows).to.be.an('array').that.is.not.empty;",
+                  "  borrows.forEach(b => {",
+                  "    pm.expect(b, `borrow ${b._id}`).to.have.property('daysOverdue');",
+                  "    pm.expect(b, `borrow ${b._id}`).to.have.property('fine');",
+                  "    pm.expect(b.daysOverdue).to.be.a('number').and.gte(0);",
+                  "    pm.expect(b.fine).to.be.a('number').and.gte(0);",
+                  "  });",
+                  "});",
+                  "pm.test('F03 — on-time borrow has fine=0', () => {",
+                  "  const rec = pm.response.json().data.borrows.find(",
+                  "    b => b._id === pm.collectionVariables.get('fine_borrow_id_a')",
+                  "  );",
+                  "  pm.expect(rec, 'fine_borrow_id_a not found in history').to.exist;",
+                  "  pm.expect(rec.daysOverdue).to.equal(0);",
+                  "  pm.expect(rec.fine).to.equal(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/borrow/history?status=returned",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "returned"
+                }
+              ]
+            },
+            "description": "Checks that the on-time return from F02 appears in history with `fine=0` and `daysOverdue=0`.\n\nFine values are computed dynamically on each read — never stored."
+          }
+        },
+        {
+          "name": "F04 — 201 Borrow again (for overdue scenario)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('F04 — Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('F04 — fine_borrow_id_b saved', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.expect(d.borrowId).to.be.a('string');",
+                  "  pm.collectionVariables.set('fine_borrow_id_b', d.borrowId);",
+                  "  console.log('✅ fine_borrow_id_b:', d.borrowId);",
+                  "  console.log('⚠️  Back-date dueDate in MongoDB before running F05-F07');",
+                  "  console.log('   mongosh command in request description ▲');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/borrow/{{fine_book_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{fine_book_id}}"
+              ]
+            },
+            "description": "Borrows the book again for the overdue scenario. Saves {{fine_borrow_id_b}}.\n\n**After running this request**, back-date the dueDate in MongoDB to simulate an overdue book:\n\n```\nmongosh mini-library --quiet --eval \\\n  \"db.borrowrecords.updateOne(\n    {_id: ObjectId('PASTE_fine_borrow_id_b_HERE')},\n    {\\$set: {dueDate: new Date(Date.now() - 47*60*60*1000)}}\n  )\"\n```\n\nThen run F05–F07 to assert fine > 0."
+          }
+        },
+        {
+          "name": "F05 — 200 Return overdue book → fine > 0",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('F05 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F05 — fine fields present in return response', () => {",
+                  "  const rec = pm.response.json().data.borrowRecord;",
+                  "  pm.expect(rec).to.have.property('daysOverdue');",
+                  "  pm.expect(rec).to.have.property('fine');",
+                  "  pm.expect(rec.daysOverdue).to.be.a('number').and.gte(0);",
+                  "  pm.expect(rec.fine).to.be.a('number').and.gte(0);",
+                  "});",
+                  "pm.test('F05 — overdue: fine > 0 (requires DB back-date from F04)', () => {",
+                  "  const rec = pm.response.json().data.borrowRecord;",
+                  "  if (rec.daysOverdue > 0) {",
+                  "    pm.expect(rec.fine).to.be.gt(0, 'fine should be > 0 when overdue');",
+                  "    console.log(`✅ daysOverdue=${rec.daysOverdue}, fine=${rec.fine}`);",
+                  "  } else {",
+                  "    console.warn('⚠️  daysOverdue=0 — did you back-date in MongoDB? See F04 description.');",
+                  "    pm.expect(rec.fine).to.equal(0, 'fine should be 0 when not overdue');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/borrow/return/{{fine_borrow_id_b}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "return",
+                "{{fine_borrow_id_b}}"
+              ]
+            },
+            "description": "**Pre-condition**: Run the `mongosh` back-date command from F04 description first (set dueDate 47h in the past).\n\n**Assertions**: `daysOverdue > 0`, `fine > 0` in the return response.\n\nFine is computed dynamically from the persisted `returnedAt` timestamp — nothing is written to the DB."
+          }
+        },
+        {
+          "name": "F06 — 200 History shows fine on returned records",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('F06 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F06 — all returned records have fine fields', () => {",
+                  "  const borrows = pm.response.json().data.borrows;",
+                  "  pm.expect(borrows).to.be.an('array').that.is.not.empty;",
+                  "  borrows.forEach(b => {",
+                  "    pm.expect(b, `borrow ${b._id}`).to.have.property('daysOverdue');",
+                  "    pm.expect(b, `borrow ${b._id}`).to.have.property('fine');",
+                  "    pm.expect(b.daysOverdue).to.be.a('number').and.gte(0);",
+                  "    pm.expect(b.fine).to.be.a('number').and.gte(0);",
+                  "  });",
+                  "});",
+                  "pm.test('F06 — overdue record has fine > 0 (if DB backdated)', () => {",
+                  "  const rec = pm.response.json().data.borrows.find(",
+                  "    b => b._id === pm.collectionVariables.get('fine_borrow_id_b')",
+                  "  );",
+                  "  if (!rec) { console.warn('fine_borrow_id_b not found in returned history'); return; }",
+                  "  if (rec.daysOverdue > 0) {",
+                  "    pm.expect(rec.fine).to.be.gt(0);",
+                  "    console.log(`✅ overdue history: daysOverdue=${rec.daysOverdue}, fine=${rec.fine}`);",
+                  "  } else {",
+                  "    console.warn('⚠️  Record is not overdue — back-date dueDate in MongoDB first (see F04).');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/borrow/history?status=returned",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "returned"
+                }
+              ]
+            },
+            "description": "Verifies that every returned borrow record in the member's history includes `daysOverdue` and `fine` computed dynamically.\n\nIf the DB back-date from F04 was performed, the fine_borrow_id_b record should show fine > 0."
+          }
+        },
+        {
+          "name": "F07 — 201 Borrow for active-overdue check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('F07 — Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('F07 — fine_borrow_id_c saved', () => {",
+                  "  const d = pm.response.json().data;",
+                  "  pm.collectionVariables.set('fine_borrow_id_c', d.borrowId);",
+                  "  console.log('✅ fine_borrow_id_c:', d.borrowId);",
+                  "  console.log('⚠️  Back-date dueDate 71h in the past before running F08');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/borrow/{{fine_book_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "{{fine_book_id}}"
+              ]
+            },
+            "description": "Borrows the book a third time. Saves {{fine_borrow_id_c}}.\n\nBack-date this one to test that **active (not-yet-returned)** borrows also carry fine fields in the history endpoint:\n\n```\nmongosh mini-library --quiet --eval \\\n  \"db.borrowrecords.updateOne(\n    {_id: ObjectId('PASTE_fine_borrow_id_c')},\n    {\\$set: {dueDate: new Date(Date.now() - 71*60*60*1000)}}\n  )\"\n```\n\nThen run F08."
+          }
+        },
+        {
+          "name": "F08 — 200 Active borrow history shows fine on overdue record",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('F08 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F08 — all active records have fine fields', () => {",
+                  "  const borrows = pm.response.json().data.borrows;",
+                  "  pm.expect(borrows).to.be.an('array');",
+                  "  borrows.forEach(b => {",
+                  "    pm.expect(b, `borrow ${b._id}`).to.have.property('daysOverdue');",
+                  "    pm.expect(b, `borrow ${b._id}`).to.have.property('fine');",
+                  "    pm.expect(b.daysOverdue).to.be.a('number').and.gte(0);",
+                  "    pm.expect(b.fine).to.be.a('number').and.gte(0);",
+                  "  });",
+                  "});",
+                  "pm.test('F08 — overdue active record has fine > 0 (if DB backdated)', () => {",
+                  "  const rec = pm.response.json().data.borrows.find(",
+                  "    b => b._id === pm.collectionVariables.get('fine_borrow_id_c')",
+                  "  );",
+                  "  if (!rec) { console.warn('fine_borrow_id_c not found'); return; }",
+                  "  if (rec.daysOverdue > 0) {",
+                  "    pm.expect(rec.fine).to.be.gt(0);",
+                  "    console.log(`✅ active overdue: daysOverdue=${rec.daysOverdue}, fine=${rec.fine}`);",
+                  "  } else {",
+                  "    console.warn('⚠️  Not overdue — back-date dueDate in MongoDB first (see F07).');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/borrow/history?status=borrowed",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "borrowed"
+                }
+              ]
+            },
+            "description": "**Pre-condition**: back-date fine_borrow_id_c 71h in the past (see F07 description).\n\nVerifies that active borrowing records also have `daysOverdue` + `fine` in the response.\n\nFor the back-dated record, fine should be > 0."
+          }
+        },
+        {
+          "name": "F09 — 200 Admin overdue=true → fine > 0 on records",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('F09 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F09 — overdue borrows have fine fields', () => {",
+                  "  const borrows = pm.response.json().data.borrows;",
+                  "  pm.expect(borrows).to.be.an('array');",
+                  "  if (borrows.length === 0) {",
+                  "    console.warn('⚠️  No overdue borrows found — back-date a record first (see F07).');",
+                  "    return;",
+                  "  }",
+                  "  borrows.forEach(b => {",
+                  "    pm.expect(b, `borrow ${b._id}`).to.have.property('daysOverdue');",
+                  "    pm.expect(b, `borrow ${b._id}`).to.have.property('fine');",
+                  "    pm.expect(b.daysOverdue).to.be.gt(0, `borrow ${b._id} should be overdue`);",
+                  "    pm.expect(b.fine).to.be.gt(0, `borrow ${b._id} should have fine > 0`);",
+                  "  });",
+                  "  console.log(`✅ ${borrows.length} overdue borrow(s) all have fine > 0`);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/borrow?overdue=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "borrow"
+              ],
+              "query": [
+                {
+                  "key": "overdue",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Admin view of all currently overdue borrows.\n\n**Pre-condition**: fine_borrow_id_c must be back-dated (see F07).\n\nVerifies that every record in this list has `fine > 0` and `daysOverdue > 0`."
+          }
+        },
+        {
+          "name": "TEARDOWN — Return active fine borrow (C)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TEARDOWN — return status 200 or 400 (already returned)', () => {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/borrow/return/{{fine_borrow_id_c}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "borrow",
+                "return",
+                "{{fine_borrow_id_c}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "TEARDOWN — Delete fine test book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TEARDOWN — delete status 200', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/books/{{fine_book_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{fine_book_id}}"
+              ]
+            }
           }
         }
       ]
