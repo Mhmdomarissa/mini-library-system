@@ -46,7 +46,16 @@ export const adminListBorrowsQuerySchema = z.object({
   bookId: z.string().optional(),
 });
 
+// ── Semantic search ────────────────────────────────────────────────────────
+export const semanticSearchSchema = z.object({
+  // Non-empty string required — 400 if missing or blank
+  query: z.string().min(1, 'query is required'),
+  // 1–20 inclusive; service also enforces max=20 for defence-in-depth
+  limit: z.number().int().min(1).max(20).optional().default(5),
+});
+
 export type CreateBookInput = z.infer<typeof createBookSchema>;
 export type UpdateBookInput = z.infer<typeof updateBookSchema>;
 export type ListBorrowsQuery = z.infer<typeof listBorrowsQuerySchema>;
 export type AdminListBorrowsQuery = z.infer<typeof adminListBorrowsQuerySchema>;
+export type SemanticSearchInput = z.infer<typeof semanticSearchSchema>;

@@ -7,6 +7,7 @@ import {
   createBookSchema,
   updateBookSchema,
   listBooksQuerySchema,
+  semanticSearchSchema,
 } from '../utils/validationSchemas';
 import * as bookController from '../controllers/book.controller';
 
@@ -36,6 +37,18 @@ router.get(
   authenticate,
   validate(listBooksQuerySchema, 'query'),
   asyncHandler(bookController.list),
+);
+
+/**
+ * POST /api/books/semantic-search
+ * Any authenticated user may search.
+ * Registered before /:id so the literal path takes priority.
+ */
+router.post(
+  '/semantic-search',
+  authenticate,
+  validate(semanticSearchSchema),
+  asyncHandler(bookController.semanticSearch),
 );
 
 router.get('/:id', authenticate, asyncHandler(bookController.getById));

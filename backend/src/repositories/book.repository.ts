@@ -1,4 +1,4 @@
-import { type Types, type QueryFilter, type ClientSession } from 'mongoose';
+import { type Types, type QueryFilter, type ClientSession, type FlattenMaps } from 'mongoose';
 import { Book } from '../models/Book';
 import type { IBook, BookStatus } from '../models/Book';
 import type { CreateBookInput, UpdateBookInput } from '../utils/validationSchemas';
@@ -113,6 +113,18 @@ export class BookRepository {
       { $set: { isDeleted: true, deletedAt: new Date(), updatedBy: deletedBy } },
       { returnDocument: 'after' },
     );
+  }
+
+  /**
+   * Fetch ALL non-deleted books including their embedding vectors.
+   * Used exclusively by BookService.semanticSearch — embedding is stripped
+   * before the result leaves the service layer.
+   *
+   * .lean() returns plain JS objects (no Mongoose overhead, no .save()).
+   * .select('+embedding') is required because the field is select:false.
+   */
+  async findAllWithEmbedding(): Promise<Array<FlattenMaps<IBook>>> {
+    return Book.find({ isDeleted: false }).select('+embedding').lean<Array<FlattenMaps<IBook>>>();
   }
 
   // ── Transaction-aware copy-count helpers ─────────────────────────────────

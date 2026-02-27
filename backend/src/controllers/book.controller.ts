@@ -1,6 +1,11 @@
 import type { Request, Response } from 'express';
 import { bookService } from '../services/book.service';
-import type { CreateBookInput, UpdateBookInput, ListBooksQuery } from '../utils/validationSchemas';
+import type {
+  CreateBookInput,
+  UpdateBookInput,
+  ListBooksQuery,
+  SemanticSearchInput,
+} from '../utils/validationSchemas';
 import { sendSuccess, sendCreated } from '../utils/response';
 import type { BookFilters } from '../repositories/book.repository';
 
@@ -53,4 +58,19 @@ export const remove = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params as { id: string };
   await bookService.softDelete(id, req.user!._id);
   sendSuccess(res, null);
+};
+
+/**
+ * POST /api/books/semantic-search
+ * Body: { query: string, limit?: number }
+ *
+ * Returns books ranked by cosine similarity to the query embedding.
+ * Embedding vectors are NEVER included in the response.
+ * 400 if query missing or limit > 20.
+ * 503 if OpenAI is unavailable.
+ */
+export const semanticSearch = async (req: Request, res: Response): Promise<void> => {
+  const { query, limit } = req.body as SemanticSearchInput;
+  const books = await bookService.semanticSearch(query, limit);
+  sendSuccess(res, { books });
 };
