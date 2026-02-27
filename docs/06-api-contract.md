@@ -177,48 +177,89 @@ Soft-delete a book (sets `isDeleted: true`). Does not remove from DB.
 
 # **Borrow API Contract**
 
-## **POST /borrow**
+## **POST /api/borrow/:bookId**
 
 Borrow a book.
 
 - **Auth:** member only
 
-**Request:**
+**Path params:**
 
-```json
-{
-  "bookId": "ObjectId string",
-  "dueDate": "2026-03-15T00:00:00.000Z"
-}
-```
+| Param | Type | Description |
+| --- | --- | --- |
+| bookId | string | MongoDB ObjectId of the book to borrow |
 
 **Response `201`:**
 
 ```json
 {
   "success": true,
-  "data": { "borrowRecord": { } }
+  "data": {
+    "borrowId": "...",
+    "dueDate": "2026-03-15T00:00:00.000Z",
+    "message": "Book borrowed successfully. Due back by 2026-03-15."
+  }
 }
 ```
 
 **Error cases:**
 - `404` — book not found
-- `409` — no available copies
+- `400` — no available copies
 - `409` — member already has this book borrowed
+- `400` — Borrow limit exceeded
+
+**Example `400` — Borrow limit exceeded:**
+
+```json
+{
+  "success": false,
+  "message": "Borrow limit exceeded (max 5 active borrows)"
+}
+```
 
 ---
 
-## **POST /return**
+## **POST /api/borrow/return/:borrowId**
 
 Return a borrowed book.
 
-- **Auth:** member only
+- **Auth:** member, admin, librarian
+
+**Path params:**
+
+| Param | Type | Description |
+| --- | --- | --- |
+| borrowId | string | MongoDB ObjectId of the borrow record |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "message": "Book returned successfully",
+  "data": {
+    "returnedAt": "2026-02-28T10:00:00Z",
+    "daysOverdue": 3,
+    "fine": 3
+  }
+}
+```
+
+---
+
+## **POST /api/books/semantic-search**
+
+Semantic book search using embeddings.
+
+- **Auth:** required
+- **Role:** any authenticated user
 
 **Request:**
 
 ```json
 {
-  "borrowRecordId": "ObjectId string"
+  "query": "emotional historical love story",
+  "limit": 5
 }
 ```
 
@@ -227,9 +268,20 @@ Return a borrowed book.
 ```json
 {
   "success": true,
-  "data": { "borrowRecord": { } }
+  "data": [
+    {
+      "bookId": "...",
+      "title": "...",
+      "author": "...",
+      "similarityScore": 0.87
+    }
+  ]
 }
 ```
+
+**Errors:**
+- `400` — invalid request
+- `401` — unauthorized
 
 ---
 
