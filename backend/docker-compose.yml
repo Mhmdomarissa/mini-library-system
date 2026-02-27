@@ -1,0 +1,59 @@
+version: "3.9"
+
+# ── Notes ────────────────────────────────────────────────────────────────────
+# MongoDB is configured as a single-node replica set (rs0) because the borrow
+# service uses Mongoose sessions (transactions), which require a replica set.
+#
+# Startup order:
+#   mongo → mongo-init (rs.initiate) → api
+#
+# The mongo-init container runs once and exits; Docker marks it
+# service_completed_successfully before starting the api.
+# ──────────────────────────────────────────────────────────────────────────────
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: library-mongo
+    restart: always
+    # Start as a single-node replica set so Mongoose transactions work.
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping').ok", "--quiet"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  # One-shot container that calls rs.initiate() after mongo is healthy.
+  # Exits 0 on success so the api service can start.
+  mongo-init:
+    image: mongo:7
+    container_name: library-mongo-init
+    restart: "no"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: >
+      mongosh --host mongo:27017 --eval
+      "try { rs.status(); print('replica set already initialised') }
+       catch(e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }); print('replica set initialised') }"
+
+  api:
+    build: .
+    container_name: library-api
+    restart: always
+    ports:
+      - "4000:4000"
+    env_file:
+      - .env
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+
+volumes:
+  mongo_data:
