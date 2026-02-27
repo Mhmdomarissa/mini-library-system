@@ -136,7 +136,7 @@ export class BookRepository {
           },
         },
       ],
-      { returnDocument: 'after', session },
+      { returnDocument: 'after', session, updatePipeline: true },
     );
   }
 
@@ -162,7 +162,7 @@ export class BookRepository {
           },
         },
       ],
-      { returnDocument: 'after', session },
+      { returnDocument: 'after', session, updatePipeline: true },
     );
   }
 }

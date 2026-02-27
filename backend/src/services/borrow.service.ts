@@ -96,7 +96,7 @@ export class BorrowService {
       return { borrowId: (record._id as Types.ObjectId).toString(), dueDate };
     } catch (err) {
       // Rollback on ANY error (AppError, Mongoose, write conflict, etc.)
-      await session.abortTransaction();
+      await session.abortTransaction().catch(() => {});
 
       // Re-throw AppErrors unchanged; wrap Mongo 11000 duplicate key as 409
       if (err instanceof AppError) throw err;
