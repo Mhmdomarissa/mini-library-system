@@ -2,7 +2,7 @@
 # ============================================================
 # Borrow / Return API test suite — mini-library-system
 #
-# Tests covered (15 cases):
+# Tests covered (17 cases):
 #   B01 — 401  No token
 #   B02 — 403  Admin tries to borrow (wrong role)
 #   B03 — 404  Non-existent book
@@ -15,10 +15,11 @@
 #   B10 — 200  History filtered by status=returned
 #   B11 — 201  Member borrows last 1-copy book (→ becomes out_of_stock)
 #   B12 — 400  Different user tries to borrow the out_of_stock book
-#   B13 — 403  Member token on admin route
-#   B14 — 200  Admin lists all borrows
-#   B15 — 200  Admin filters by status=returned
-#   B16 — 200  Admin filters by overdue=true
+#   B13 — 400  Borrow limit exceeded (MAX_ACTIVE_BORROWS)
+#   B14 — 403  Member token on admin route
+#   B15 — 200  Admin lists all borrows
+#   B16 — 200  Admin filters by status=returned
+#   B17 — 200  Admin filters by overdue=true
 #
 # Prerequisites:
 #   • Backend running on http://localhost:4000
@@ -154,6 +155,23 @@ mongosh mini-library --quiet --eval \
   "db.books.updateOne({ _id: ObjectId('$ARCHIVED_ID') }, { \$set: { status: 'archived' } })" 2>/dev/null
 echo "✅  Archived book created  ID=$ARCHIVED_ID"
 
+# Extra books for MAX_ACTIVE_BORROWS test
+MAX_LIMIT=$(grep -E '^MAX_ACTIVE_BORROWS=' .env 2>/dev/null | tail -1 | cut -d'=' -f2)
+if ! [[ "$MAX_LIMIT" =~ ^[0-9]+$ ]]; then
+  MAX_LIMIT=5
+fi
+LIMIT_EXCEED_COUNT=$((MAX_LIMIT + 1))
+LIMIT_BOOK_IDS=()
+for i in $(seq 1 "$LIMIT_EXCEED_COUNT"); do
+  LIMIT_RESP=$(curl -s -X POST "$BASE/api/books" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $ADMIN_TOKEN" \
+    -d "{\"title\":\"Limit Book $i\",\"author\":\"Limit Author\",\"isbn\":\"LM-$TS-$i\",\"genre\":\"Technology\",\"publishedYear\":2024,\"totalCopies\":1,\"description\":\"Created for MAX_ACTIVE_BORROWS test\"}")
+  LIMIT_ID=$(echo "$LIMIT_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['book']['_id'])" 2>/dev/null)
+  LIMIT_BOOK_IDS+=("$LIMIT_ID")
+done
+echo "✅  Created $LIMIT_EXCEED_COUNT books for borrow-limit test (max=$MAX_LIMIT)"
+
 echo ""
 echo "════════════════════════════════════════════════════"
 echo "  BORROW / RETURN TEST SUITE"
@@ -251,27 +269,58 @@ echo -e "${CYAN}════════ B12 — 400 Out of stock (different use
 run_test "POST /api/borrow/$ONECOPY_ID — member2, out_of_stock → 400" "400" \
   "POST" "/api/borrow/$ONECOPY_ID" "--" "MEMBER2"
 
-# ── B13 — 403 Member on admin route ──────────────────────────
+# ── B13 — 400 Borrow limit exceeded ───────────────────────────
 echo ""
-echo -e "${CYAN}════════ B13 — 403 Member on admin route ════════${RESET}"
+echo -e "${CYAN}════════ B13 — 400 Borrow limit exceeded ════════${RESET}"
+
+# Detect current active count first (the test may already have one active borrow from B11)
+CURRENT_ACTIVE=$(curl -s "$BASE/api/borrow/history?status=borrowed&limit=200" \
+  -H "Authorization: Bearer $MEMBER_TOKEN" \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print(len(d.get('data', {}).get('borrows', [])))" 2>/dev/null)
+if ! [[ "$CURRENT_ACTIVE" =~ ^[0-9]+$ ]]; then
+  CURRENT_ACTIVE=0
+fi
+
+REMAINING_SLOTS=$((MAX_LIMIT - CURRENT_ACTIVE))
+if [ "$REMAINING_SLOTS" -lt 0 ]; then
+  REMAINING_SLOTS=0
+fi
+
+# Borrow until exactly reaching MAX_LIMIT (all should be 201)
+for i in $(seq 1 "$REMAINING_SLOTS"); do
+  LIMIT_BID="${LIMIT_BOOK_IDS[$((i - 1))]}"
+  TARGET_COUNT=$((CURRENT_ACTIVE + i))
+  run_test "POST /api/borrow/$LIMIT_BID — within limit ($TARGET_COUNT/$MAX_LIMIT)" "201" \
+    "POST" "/api/borrow/$LIMIT_BID" "--" "MEMBER"
+done
+
+# Borrow one additional book (must fail with 400)
+EXTRA_INDEX=$REMAINING_SLOTS
+EXTRA_LIMIT_BID="${LIMIT_BOOK_IDS[$EXTRA_INDEX]}"
+run_test "POST /api/borrow/$EXTRA_LIMIT_BID — exceed limit → 400" "400" \
+  "POST" "/api/borrow/$EXTRA_LIMIT_BID" "--" "MEMBER"
+
+# ── B14 — 403 Member on admin route ──────────────────────────
+echo ""
+echo -e "${CYAN}════════ B14 — 403 Member on admin route ════════${RESET}"
 run_test "GET /api/admin/borrow — member token → 403" "403" \
   "GET" "/api/admin/borrow" "--" "MEMBER"
 
-# ── B14 — 200 Admin list all borrows ─────────────────────────
+# ── B15 — 200 Admin list all borrows ─────────────────────────
 echo ""
-echo -e "${CYAN}════════ B14 — 200 Admin list all borrows ════════${RESET}"
+echo -e "${CYAN}════════ B15 — 200 Admin list all borrows ════════${RESET}"
 run_test "GET /api/admin/borrow — admin → 200" "200" \
   "GET" "/api/admin/borrow" "--" "ADMIN"
 
-# ── B15 — 200 Admin filter by status=returned ─────────────────
+# ── B16 — 200 Admin filter by status=returned ─────────────────
 echo ""
-echo -e "${CYAN}════════ B15 — 200 Admin filter status=returned ════════${RESET}"
+echo -e "${CYAN}════════ B16 — 200 Admin filter status=returned ════════${RESET}"
 run_test "GET /api/admin/borrow?status=returned — admin → 200" "200" \
   "GET" "/api/admin/borrow?status=returned" "--" "ADMIN"
 
-# ── B16 — 200 Admin filter overdue=true ────────────────────────
+# ── B17 — 200 Admin filter overdue=true ────────────────────────
 echo ""
-echo -e "${CYAN}════════ B16 — 200 Admin filter overdue=true ════════${RESET}"
+echo -e "${CYAN}════════ B17 — 200 Admin filter overdue=true ════════${RESET}"
 run_test "GET /api/admin/borrow?overdue=true — admin → 200" "200" \
   "GET" "/api/admin/borrow?overdue=true" "--" "ADMIN"
 
@@ -295,11 +344,40 @@ if [ -n "$ONECOPY_BORROW_ID" ]; then
   echo "✅  Returned 1-copy book borrow ($ONECOPY_BORROW_ID)"
 fi
 
+# Return active borrows from MAX_ACTIVE_BORROWS test books
+for LIMIT_BID in "${LIMIT_BOOK_IDS[@]}"; do
+  ACTIVE_BORROW_ID=$(curl -s "$BASE/api/borrow/history?status=borrowed&limit=200" \
+    -H "Authorization: Bearer $MEMBER_TOKEN" \
+    | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+target = '$LIMIT_BID'
+for b in d.get('data', {}).get('borrows', []):
+    raw_book = b.get('bookId')
+    book_id = raw_book.get('_id') if isinstance(raw_book, dict) else raw_book
+    if str(book_id) == target and b.get('status') == 'borrowed':
+        print(b.get('_id'))
+        break
+" 2>/dev/null || echo "")
+
+  if [ -n "$ACTIVE_BORROW_ID" ]; then
+    curl -s -X POST "$BASE/api/borrow/return/$ACTIVE_BORROW_ID" \
+      -H "Authorization: Bearer $MEMBER_TOKEN" > /dev/null
+    echo "✅  Returned limit-test borrow ($ACTIVE_BORROW_ID)"
+  fi
+done
+
 # Soft-delete the seeded books
 for BID in "$BOOK_ID" "$ONECOPY_ID" "$ARCHIVED_ID"; do
   STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "$BASE/api/books/$BID" \
     -H "Authorization: Bearer $ADMIN_TOKEN")
   echo "✅  Deleted book $BID ($STATUS)"
+done
+
+for BID in "${LIMIT_BOOK_IDS[@]}"; do
+  STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE "$BASE/api/books/$BID" \
+    -H "Authorization: Bearer $ADMIN_TOKEN")
+  echo "✅  Deleted limit-test book $BID ($STATUS)"
 done
 
 # ── Summary ────────────────────────────────────────────────────

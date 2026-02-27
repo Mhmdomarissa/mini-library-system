@@ -34,6 +34,7 @@ export class BorrowService {
     userId: Types.ObjectId,
   ): Promise<{ borrowId: string; dueDate: Date }> {
     const durationDays = parseInt(process.env.BORROW_DURATION_DAYS ?? '14', 10);
+    const maxActiveBorrows = parseInt(process.env.MAX_ACTIVE_BORROWS ?? '5', 10);
 
     const session = await mongoose.startSession();
 
@@ -68,7 +69,13 @@ export class BorrowService {
         throw AppError.conflict('You already have an active borrow for this book');
       }
 
-      // 4. Decrement book copies atomically inside the transaction
+      // 4. Enforce member-wide active borrow limit (inside the same transaction/session)
+      const activeBorrowCount = await borrowRepository.countActiveBorrows(userId, session);
+      if (activeBorrowCount >= maxActiveBorrows) {
+        throw AppError.badRequest(`Borrow limit exceeded (max ${maxActiveBorrows} active borrows)`);
+      }
+
+      // 5. Decrement book copies atomically inside the transaction
       const updatedBook = await bookRepository.decrementCopies(book._id as Types.ObjectId, session);
 
       if (!updatedBook) {
@@ -76,7 +83,7 @@ export class BorrowService {
         throw AppError.internal('Failed to update book copies');
       }
 
-      // 5. Create the borrow record
+      // 6. Create the borrow record
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + durationDays);
 
@@ -90,7 +97,7 @@ export class BorrowService {
         session,
       );
 
-      // 6. Commit — if any step threw, we jump to catch block which aborts
+      // 7. Commit — if any step threw, we jump to catch block which aborts
       await session.commitTransaction();
 
       return { borrowId: (record._id as Types.ObjectId).toString(), dueDate };

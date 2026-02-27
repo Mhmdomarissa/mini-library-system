@@ -18,6 +18,13 @@ export interface BorrowFilters {
  */
 export class BorrowRepository {
   /**
+   * Count currently active borrows for a user inside a transaction.
+   */
+  async countActiveBorrows(userId: Types.ObjectId, session: ClientSession): Promise<number> {
+    return BorrowRecord.countDocuments({ userId, status: 'borrowed' }).session(session);
+  }
+
+  /**
    * Check whether a user already has an active (status='borrowed') record
    * for a given book. Used inside the borrow transaction to prevent duplicates.
    */
