@@ -6,6 +6,19 @@ import type { BorrowFilters } from '../repositories/borrow.repository';
 import type { IBorrowRecord } from '../models/BorrowRecord';
 import type { PaginationParams, PaginatedResult } from '../utils/pagination';
 import { AppError } from '../utils/AppError';
+import { calculateFine } from '../utils/fine';
+
+/** IBorrowRecord enriched with dynamically computed fine fields */
+export interface BorrowRecordWithFine extends Omit<IBorrowRecord, never> {
+  daysOverdue: number;
+  fine: number;
+}
+
+/** Helper: attach fine fields to a plain borrow record */
+function withFine(record: IBorrowRecord): BorrowRecordWithFine {
+  const { daysOverdue, fine } = calculateFine(record.dueDate, record.returnedAt ?? null);
+  return Object.assign(record, { daysOverdue, fine });
+}
 
 /**
  * BorrowService — all borrow/return business logic.
@@ -129,7 +142,7 @@ export class BorrowService {
    *  4. Increment book's availableCopies (flips status → available if was out_of_stock)
    *  5. Commit
    */
-  async return(borrowId: string, userId: Types.ObjectId): Promise<IBorrowRecord> {
+  async return(borrowId: string, userId: Types.ObjectId): Promise<BorrowRecordWithFine> {
     const session = await mongoose.startSession();
 
     try {
@@ -166,7 +179,9 @@ export class BorrowService {
       // 5. Commit
       await session.commitTransaction();
 
-      return updated;
+      // Fine is computed after commit using the persisted returnedAt timestamp.
+      // It does NOT need to be inside the transaction — it touches no DB state.
+      return withFine(updated);
     } catch (err) {
       await session.abortTransaction();
       if (err instanceof AppError) throw err;
@@ -185,7 +200,7 @@ export class BorrowService {
     userId: Types.ObjectId,
     filters: { status?: IBorrowRecord['status'] },
     pagination: PaginationParams,
-  ): Promise<PaginatedResult<IBorrowRecord>> {
+  ): Promise<PaginatedResult<BorrowRecordWithFine>> {
     const repoFilters: BorrowFilters = {
       userId: userId.toString(),
     };
@@ -196,7 +211,8 @@ export class BorrowService {
       repoFilters.status = filters.status;
     }
 
-    return borrowRepository.findWithFilters(repoFilters, pagination);
+    const result = await borrowRepository.findWithFilters(repoFilters, pagination);
+    return { ...result, items: result.items.map(withFine) };
   }
 
   /**
@@ -206,8 +222,9 @@ export class BorrowService {
   async adminList(
     filters: BorrowFilters,
     pagination: PaginationParams,
-  ): Promise<PaginatedResult<IBorrowRecord>> {
-    return borrowRepository.findWithFilters(filters, pagination);
+  ): Promise<PaginatedResult<BorrowRecordWithFine>> {
+    const result = await borrowRepository.findWithFilters(filters, pagination);
+    return { ...result, items: result.items.map(withFine) };
   }
 }
 
