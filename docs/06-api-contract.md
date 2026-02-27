@@ -249,10 +249,17 @@ Return a borrowed book.
 
 ## **POST /api/books/semantic-search**
 
-Semantic book search using embeddings.
+Semantic book search using OpenAI embeddings and cosine similarity.
 
 - **Auth:** required
 - **Role:** any authenticated user
+
+**Implementation details:**
+- The user's `query` string is embedded at request time using **OpenAI `text-embedding-3-small`**.
+- The resulting query vector is compared against every book's stored `embedding` field using **cosine similarity**.
+- Results are ranked by similarity score in **descending order** (most similar first).
+- Only non-deleted books with a stored embedding are considered.
+- Similarity computation happens in the **service layer** (in-memory) — no MongoDB vector index required.
 
 **Request:**
 
@@ -262,6 +269,11 @@ Semantic book search using embeddings.
   "limit": 5
 }
 ```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| query | string | Natural language search query |
+| limit | number | Max results to return (default: 5, max: 20) |
 
 **Response `200`:**
 
@@ -273,6 +285,7 @@ Semantic book search using embeddings.
       "bookId": "...",
       "title": "...",
       "author": "...",
+      "genre": "...",
       "similarityScore": 0.87
     }
   ]
@@ -280,8 +293,9 @@ Semantic book search using embeddings.
 ```
 
 **Errors:**
-- `400` — invalid request
+- `400` — missing or empty query
 - `401` — unauthorized
+- `503` — OpenAI API unavailable
 
 ---
 

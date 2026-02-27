@@ -58,6 +58,7 @@ Book {
   updatedBy: ObjectId (ref User)
   createdAt: Date
   updatedAt: Date
+  embedding: number[]
 }
 ```
 
@@ -68,6 +69,7 @@ Book {
 | status | Fast filtering |
 | createdBy | Audit logging |
 | isbn | Unique identifier |
+| embedding | Vector representation for semantic search |
 
 ### **Index Strategy**
 
@@ -84,6 +86,16 @@ To support:
 - Search by title
 - Search by author
 - Natural language queries later
+
+### **Embedding Field**
+
+- `embedding: number[]`
+- Stores the OpenAI-generated vector representation of the book's `title`, `author`, and `description` combined.
+- Generated using **OpenAI `text-embedding-3-small`** model (1536-dimensional vector).
+- Used exclusively for semantic search via cosine similarity in the service layer.
+- **Not indexed** — similarity is computed in-memory across all stored embeddings.
+- **Not returned** in standard book responses (`GET /books`, `GET /books/:id`). Excluded via field projection.
+- Generated on book creation and regenerated on update if `title`, `author`, or `description` changes.
 
 # **BorrowRecord Collection**
 
