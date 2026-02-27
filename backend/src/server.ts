@@ -1,16 +1,36 @@
 import 'dotenv/config';
 import type { Server } from 'http';
+import mongoose from 'mongoose';
 import app from './app';
 import connectDB from './config/database';
 import logger from './utils/logger';
 
 const PORT = process.env.PORT || 3000;
 
-// ── Graceful shutdown ────────────────────────────────────────────
+// ── Graceful shutdown ─────────────────────────────────────────────────────────
+// Called on SIGTERM (Docker stop / k8s pod eviction) and SIGINT (Ctrl-C).
+//
+// Sequence:
+//   1. server.close() — stop accepting new connections; in-flight requests finish.
+//   2. mongoose.connection.close(false) — drain the Mongo connection pool cleanly
+//      without force-killing open sockets.  Passing false means we wait for any
+//      in-progress operations (including open transactions) to complete rather
+//      than hard-aborting them.
+//   3. process.exit(0) — clean exit so the container manager sees success.
+//
+// A 10-second hard-kill timer ensures we never block a rolling deploy forever if
+// a request is genuinely stuck.
 const shutdown = (server: Server, signal: string): void => {
   logger.info(`${signal} received — shutting down gracefully`);
-  server.close(() => {
-    logger.info('HTTP server closed');
+
+  server.close(async () => {
+    logger.info('HTTP server closed — draining Mongo connection pool');
+    try {
+      await mongoose.connection.close(false);
+      logger.info('Mongo connection closed');
+    } catch (err) {
+      logger.error('Error closing Mongo connection', { err });
+    }
     process.exit(0);
   });
 
