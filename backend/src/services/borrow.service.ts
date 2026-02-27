@@ -17,7 +17,10 @@ export interface BorrowRecordWithFine extends Omit<IBorrowRecord, never> {
 /** Helper: attach fine fields to a plain borrow record */
 function withFine(record: IBorrowRecord): BorrowRecordWithFine {
   const { daysOverdue, fine } = calculateFine(record.dueDate, record.returnedAt ?? null);
-  return Object.assign(record, { daysOverdue, fine });
+  // JSON round-trip converts a mongoose Document to a plain object so that
+  // the extra computed fields survive JSON serialisation via res.json().
+  const plain = JSON.parse(JSON.stringify(record)) as Record<string, unknown>;
+  return { ...plain, daysOverdue, fine } as unknown as BorrowRecordWithFine;
 }
 
 /**
