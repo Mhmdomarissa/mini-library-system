@@ -1,4 +1,4 @@
-import { type Types, type QueryFilter } from 'mongoose';
+import { type Types, type QueryFilter, type ClientSession } from 'mongoose';
 import { Book } from '../models/Book';
 import type { IBook, BookStatus } from '../models/Book';
 import type { CreateBookInput, UpdateBookInput } from '../utils/validationSchemas';
@@ -106,6 +106,63 @@ export class BookRepository {
       { _id: id, isDeleted: false },
       { $set: { isDeleted: true, deletedAt: new Date(), updatedBy: deletedBy } },
       { returnDocument: 'after' },
+    );
+  }
+
+  // ── Transaction-aware copy-count helpers ─────────────────────────────────
+  // Called ONLY from BorrowService inside a mongoose session/transaction.
+  // Both methods use findOneAndUpdate with $inc for atomicity.
+
+  /**
+   * Decrement availableCopies by 1 inside a transaction.
+   * Returns the updated book, or null if the book is not found / deleted.
+   * Does NOT enforce business rules — the service must check before calling.
+   */
+  async decrementCopies(bookId: Types.ObjectId, session: ClientSession): Promise<IBook | null> {
+    return Book.findOneAndUpdate(
+      { _id: bookId, isDeleted: false },
+      [
+        {
+          $set: {
+            availableCopies: { $subtract: ['$availableCopies', 1] },
+            // When copies hit 0, flip status to out_of_stock
+            status: {
+              $cond: {
+                if: { $lte: [{ $subtract: ['$availableCopies', 1] }, 0] },
+                then: 'out_of_stock',
+                else: '$status',
+              },
+            },
+          },
+        },
+      ],
+      { returnDocument: 'after', session },
+    );
+  }
+
+  /**
+   * Increment availableCopies by 1 inside a transaction.
+   * Returns the updated book, or null if the book is not found / deleted.
+   */
+  async incrementCopies(bookId: Types.ObjectId, session: ClientSession): Promise<IBook | null> {
+    return Book.findOneAndUpdate(
+      { _id: bookId, isDeleted: false },
+      [
+        {
+          $set: {
+            availableCopies: { $add: ['$availableCopies', 1] },
+            // When a copy is returned, re-open the book if it was out_of_stock
+            status: {
+              $cond: {
+                if: { $eq: ['$status', 'out_of_stock'] },
+                then: 'available',
+                else: '$status',
+              },
+            },
+          },
+        },
+      ],
+      { returnDocument: 'after', session },
     );
   }
 }

@@ -6,6 +6,8 @@ import { AppError } from './utils/AppError';
 import { sendError } from './utils/response';
 import logger from './utils/logger';
 import bookRoutes from './routes/book.routes';
+import borrowRoutes from './routes/borrow.routes';
+import adminRoutes from './routes/admin.routes';
 
 const app: Application = express();
 
@@ -22,6 +24,8 @@ app.get('/health', (_req, res) => {
 
 // API Routes
 app.use('/api/books', bookRoutes);
+app.use('/api/borrow', borrowRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler — must be registered AFTER all routes
 app.use((_req: Request, res: Response) => {

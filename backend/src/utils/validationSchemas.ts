@@ -22,16 +22,31 @@ export const createBookSchema = z.object({
 
 export const updateBookSchema = createBookSchema.partial();
 
-export const borrowBookSchema = z.object({
-  bookId: z.string().min(1, 'Book ID is required'),
-  dueDate: z.string().datetime({ message: 'Invalid due date format' }),
+// ── Borrow ─────────────────────────────────────────────────────────────────
+// No request body for borrow — bookId comes from URL param (:bookId)
+// No request body for return — borrowId comes from URL param (:borrowId)
+
+// GET /api/borrow/history  — member's own borrow history
+export const listBorrowsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(10),
+  status: z.enum(['borrowed', 'returned', 'overdue']).optional(),
 });
 
-export const returnBookSchema = z.object({
-  borrowRecordId: z.string().min(1, 'Borrow record ID is required'),
+// GET /api/admin/borrow — admin/librarian view
+export const adminListBorrowsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional().default(1),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(10),
+  status: z.enum(['borrowed', 'returned', 'overdue']).optional(),
+  overdue: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true'),
+  userId: z.string().optional(),
+  bookId: z.string().optional(),
 });
 
 export type CreateBookInput = z.infer<typeof createBookSchema>;
 export type UpdateBookInput = z.infer<typeof updateBookSchema>;
-export type BorrowBookInput = z.infer<typeof borrowBookSchema>;
-export type ReturnBookInput = z.infer<typeof returnBookSchema>;
+export type ListBorrowsQuery = z.infer<typeof listBorrowsQuerySchema>;
+export type AdminListBorrowsQuery = z.infer<typeof adminListBorrowsQuerySchema>;

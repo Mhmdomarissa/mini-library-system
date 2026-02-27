@@ -16,20 +16,33 @@ export interface IBorrowRecord extends Document {
 
 const borrowRecordSchema = new Schema<IBorrowRecord>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    bookId: { type: Schema.Types.ObjectId, ref: 'Book', required: true },
+    userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    bookId: { type: Schema.Types.ObjectId, ref: 'Book', required: true, index: true },
     borrowedAt: { type: Date, required: true, default: Date.now },
     dueDate: { type: Date, required: true },
     returnedAt: { type: Date, default: null },
-    status: { type: String, enum: ['borrowed', 'returned', 'overdue'], default: 'borrowed' },
+    status: {
+      type: String,
+      enum: ['borrowed', 'returned', 'overdue'],
+      default: 'borrowed',
+      index: true,
+    },
   },
   { timestamps: true },
 );
 
-borrowRecordSchema.index({ userId: 1 });
-borrowRecordSchema.index({ bookId: 1 });
-borrowRecordSchema.index({ status: 1 });
-borrowRecordSchema.index({ userId: 1, status: 1 }); // compound: my borrows by status
-borrowRecordSchema.index({ dueDate: 1, status: 1 }); // compound: overdue detection query
+// ── Duplicate Active Borrow Prevention ─────────────────────────────────────
+// Only one active (status='borrowed') record per user+book pair.
+// Partial index means the uniqueness constraint is lifted once the book is
+// returned, allowing the same user to borrow the same book again later.
+borrowRecordSchema.index(
+  { userId: 1, bookId: 1 },
+  { unique: true, partialFilterExpression: { status: 'borrowed' } },
+);
+
+// ── Query-Optimised Compound Indexes ───────────────────────────────────────
+borrowRecordSchema.index({ userId: 1, status: 1 }); // GET /borrow/history
+borrowRecordSchema.index({ bookId: 1, status: 1 }); // admin: which users have this book
+borrowRecordSchema.index({ dueDate: 1, status: 1 }); // future overdue scanning job
 
 export const BorrowRecord = model<IBorrowRecord>('BorrowRecord', borrowRecordSchema);
