@@ -54,8 +54,19 @@ export const semanticSearchSchema = z.object({
   limit: z.number().int().min(1).max(20).optional().default(5),
 });
 
+// ── User management (admin) ────────────────────────────────────────────────
+export const updateUserRoleSchema = z.object({
+  role: z.enum(['admin', 'librarian', 'member']),
+});
+
+export const updateUserStatusSchema = z.object({
+  isActive: z.boolean(),
+});
+
 export type CreateBookInput = z.infer<typeof createBookSchema>;
 export type UpdateBookInput = z.infer<typeof updateBookSchema>;
 export type ListBorrowsQuery = z.infer<typeof listBorrowsQuerySchema>;
 export type AdminListBorrowsQuery = z.infer<typeof adminListBorrowsQuerySchema>;
 export type SemanticSearchInput = z.infer<typeof semanticSearchSchema>;
+export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>;
+export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;

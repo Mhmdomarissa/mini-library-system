@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LogOut, LayoutDashboard, Library, History, ClipboardList, Menu } from 'lucide-react';
+import { BookOpen, LogOut, LayoutDashboard, Library, History, ClipboardList, Users, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -19,6 +19,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
+import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/features/auth';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +27,10 @@ interface NavLink {
   href: string;
   label: string;
   icon: React.ReactNode;
+  /** Show for admin + librarian */
   adminOnly?: boolean;
+  /** Show for admin only (not librarian) */
+  adminExclusive?: boolean;
 }
 
 const NAV_LINKS: NavLink[] = [
@@ -34,6 +38,7 @@ const NAV_LINKS: NavLink[] = [
   { href: '/dashboard/history', label: 'History', icon: <History className="mr-1.5 h-4 w-4" /> },
   { href: '/admin/books', label: 'Manage Books', icon: <Library className="mr-1.5 h-4 w-4" />, adminOnly: true },
   { href: '/admin/borrows', label: 'All Borrows', icon: <ClipboardList className="mr-1.5 h-4 w-4" />, adminOnly: true },
+  { href: '/admin/users', label: 'Users', icon: <Users className="mr-1.5 h-4 w-4" />, adminExclusive: true },
 ];
 
 export function Navbar() {
@@ -49,7 +54,11 @@ export function Navbar() {
     router.push('/login');
   };
 
-  const visibleLinks = NAV_LINKS.filter((link) => !link.adminOnly || isAdmin);
+  const visibleLinks = NAV_LINKS.filter((link) => {
+    if (link.adminExclusive) return role === 'admin';
+    if (link.adminOnly) return isAdmin;
+    return true;
+  });
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
@@ -78,6 +87,9 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {/* Theme toggle */}
+          <ThemeToggle />
+
           {/* Role badge (desktop) */}
           {role && (
             <Badge variant="outline" className="hidden text-xs capitalize md:inline-flex">
