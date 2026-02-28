@@ -15,6 +15,12 @@ import adminRoutes from './routes/admin.routes';
 
 const app: Application = express();
 
+// ── Trust proxy ───────────────────────────────────────────────────────────
+// Railway (and most PaaS) sit behind a load balancer that sets X-Forwarded-For.
+// Without this, express-rate-limit cannot identify real client IPs and throws
+// ERR_ERL_UNEXPECTED_X_FORWARDED_FOR. '1' means trust the first hop only.
+app.set('trust proxy', 1);
+
 // ── Security headers ──────────────────────────────────────────────────────
 // helmet() sets: X-DNS-Prefetch-Control, X-Frame-Options (DENY), HSTS,
 // X-Download-Options, X-Content-Type-Options (nosniff), X-XSS-Protection
