@@ -28,5 +28,9 @@ export function useSemanticSearch(q: string) {
     queryKey: bookKeys.semantic(q),
     queryFn: () => bookService.semanticSearch(q),
     enabled: q.length >= 3,
+    // Do not retry on failure — a 503 means the embedding service is down.
+    // Failing fast lets the caller fall back to regular text search immediately.
+    retry: false,
+    staleTime: 0,
   });
 }

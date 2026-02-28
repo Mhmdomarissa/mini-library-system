@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ import {
 import { AppLayout } from '@/components/layout';
 import { PageHeader, LoadingSpinner, ErrorMessage, EmptyState } from '@/components/shared';
 import { useBorrowHistory, useReturnBook } from '@/features/borrow';
+import { useAuth } from '@/features/auth';
 import type { Book, BorrowStatus } from '@/types';
 
 const statusVariant: Record<BorrowStatus, 'default' | 'secondary' | 'destructive'> = {
@@ -26,6 +28,14 @@ const statusVariant: Record<BorrowStatus, 'default' | 'secondary' | 'destructive
 
 export default function HistoryPage() {
   const [page, setPage] = useState(1);
+
+  // ── In-page auth guard ───────────────────────────────────────────────────
+  const { authUser, loading: authLoading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (!authLoading && !authUser) router.replace('/login');
+  }, [authUser, authLoading, router]);
+
   const { data, isLoading, isError } = useBorrowHistory(page);
   const returnBook = useReturnBook();
 

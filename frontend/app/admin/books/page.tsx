@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -36,6 +37,7 @@ import {
 import { AppLayout } from '@/components/layout';
 import { PageHeader, LoadingSpinner, ErrorMessage, EmptyState } from '@/components/shared';
 import { useBooks, useCreateBook, useDeleteBook } from '@/features/books';
+import { useAuth } from '@/features/auth';
 import type { CreateBookPayload } from '@/types';
 
 const schema = z.object({
@@ -53,6 +55,15 @@ type FormValues = z.infer<typeof schema>;
 export default function AdminBooksPage() {
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
+
+  // ── In-page role guard ───────────────────────────────────────────────────
+  const { authUser, role, loading: authLoading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (authLoading) return;
+    if (!authUser) router.replace('/login');
+    else if (role !== 'admin') router.replace('/dashboard');
+  }, [authUser, role, authLoading, router]);
 
   const { data, isLoading, isError } = useBooks({ page, limit: 20 });
   const createBook = useCreateBook();

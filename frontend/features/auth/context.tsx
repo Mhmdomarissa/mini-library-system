@@ -52,9 +52,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           setAuthUser({ firebaseUser, profile });
 
-          // Set lightweight cookies so Next.js edge middleware can read them
-          Cookies.set('__session', 'true', { sameSite: 'lax' });
-          Cookies.set('__role', profile.role, { sameSite: 'lax' });
+          // Lightweight routing-hint cookies consumed by Next.js edge middleware.
+          // These are NOT used for authorization — every API request is verified
+          // by the backend via the Firebase ID token in the Authorization header.
+          const cookieOpts = {
+            sameSite: 'lax' as const,
+            path: '/',
+            expires: 7, // days
+            secure: process.env.NODE_ENV === 'production',
+          };
+          Cookies.set('__session', 'true', cookieOpts);
+          Cookies.set('__role', profile.role, cookieOpts);
         } catch {
           // Token invalid / user deleted on backend — sign out cleanly
           await signOut(auth);

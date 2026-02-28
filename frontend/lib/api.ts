@@ -19,8 +19,10 @@ export class ApiError extends Error {
 async function getToken(): Promise<string | null> {
   const user = auth.currentUser;
   if (!user) return null;
-  // getIdToken(true) force-refreshes if expired
-  return user.getIdToken();
+  // Pass false (default) — Firebase SDK uses the cached token and auto-renews
+  // it transparently when it is within 5 minutes of expiry. Passing true would
+  // force a network round-trip on every request, which is wasteful.
+  return user.getIdToken(false);
 }
 
 // ── Core request ───────────────────────────────────────────────────────────────

@@ -1,21 +1,49 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { Sparkles, AlertTriangle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AppLayout } from '@/components/layout';
 import { PageHeader, LoadingSpinner, ErrorMessage, EmptyState } from '@/components/shared';
-import { useBooks } from '@/features/books';
+import { useBooks, useSemanticSearch } from '@/features/books';
 import { useBorrowBook } from '@/features/borrow';
+import { useAuth } from '@/features/auth';
 
 export default function DashboardPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError } = useBooks({ page, limit: 12, search: search || undefined });
+  // ── In-page auth guard ───────────────────────────────────────────────────
+  const { authUser, loading: authLoading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (!authLoading && !authUser) router.replace('/login');
+  }, [authUser, authLoading, router]);
+
+  // ── Data fetching ────────────────────────────────────────────────────────
+  // Semantic search runs in parallel when 3+ chars are typed.
+  // On 503 (embedding service down) it fails fast (retry:false) and we fall
+  // back transparently to the regular paginated text search.
+  const semanticEnabled = search.length >= 3;
+  const { data: semanticResults, isError: isSemanticError, isFetching: isSemanticFetching } =
+    useSemanticSearch(search);
+  const { data, isLoading: isRegularLoading, isError: isRegularError } = useBooks({
+    page,
+    limit: 12,
+    search: search || undefined,
+  });
+
+  const isUsingSemanticSearch = semanticEnabled && !isSemanticError && semanticResults !== undefined;
+  const displayBooks = isUsingSemanticSearch ? semanticResults : data?.items ?? [];
+  const isLoading = semanticEnabled ? isSemanticFetching && !isUsingSemanticSearch : isRegularLoading;
+  const isError = isUsingSemanticSearch ? false : isRegularError;
+  const showSemanticFallbackNotice = semanticEnabled && isSemanticError;
+
   const borrowBook = useBorrowBook();
 
   const handleBorrow = async (bookId: string) => {
@@ -36,13 +64,23 @@ export default function DashboardPage() {
       />
 
       {/* Search */}
-      <div className="mb-6 flex gap-2">
+      <div className="mb-6 flex items-center gap-2">
         <Input
           placeholder="Search by title, author, genre…"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           className="max-w-sm"
         />
+        {isUsingSemanticSearch && (
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Sparkles className="h-3 w-3" /> AI search
+          </span>
+        )}
+        {showSemanticFallbackNotice && (
+          <span className="flex items-center gap-1 text-xs text-amber-600">
+            <AlertTriangle className="h-3 w-3" /> AI search unavailable — showing text results
+          </span>
+        )}
       </div>
 
       {/* Content */}
@@ -54,14 +92,14 @@ export default function DashboardPage() {
 
       {isError && <ErrorMessage message="Failed to load books. Please refresh." />}
 
-      {data && data.items.length === 0 && (
+      {!isLoading && displayBooks.length === 0 && (
         <EmptyState title="No books found" description="Try a different search." />
       )}
 
-      {data && data.items.length > 0 && (
+      {displayBooks.length > 0 && (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {data.items.map((book) => (
+            {displayBooks.map((book) => (
               <Card key={book._id}>
                 <CardHeader className="pb-2">
                   <CardTitle className="line-clamp-1 text-base">{book.title}</CardTitle>
@@ -86,8 +124,9 @@ export default function DashboardPage() {
             ))}
           </div>
 
-          {/* Pagination */}
-          <div className="mt-6 flex items-center justify-between">
+          {/* Pagination — hidden when showing semantic search results */}
+          {!isUsingSemanticSearch && data && (
+            <div className="mt-6 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Page {data.pagination.page} of {data.pagination.totalPages}
             </p>
@@ -110,6 +149,7 @@ export default function DashboardPage() {
               </Button>
             </div>
           </div>
+          )}
         </>
       )}
     </AppLayout>
