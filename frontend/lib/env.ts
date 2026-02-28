@@ -1,15 +1,18 @@
 /**
  * Typed, validated environment variables.
  *
- * Each property is a getter so validation is deferred to the first access —
- * NOT at module load time. This prevents Next.js static prerendering from
- * crashing on pages that don't use these vars (e.g. /_not-found, 404).
+ * IMPORTANT: Next.js only inlines process.env.NEXT_PUBLIC_* at build time
+ * when accessed via literal dot notation (process.env.NEXT_PUBLIC_FOO).
+ * Bracket notation with a dynamic key (process.env[key]) is NOT replaced
+ * and always evaluates to undefined in the browser bundle.
+ *
+ * Each property is still a getter so validation is deferred to first access —
+ * preventing static prerender crashes on pages that don't use these vars.
  *
  * On Vercel: set all NEXT_PUBLIC_* keys in Settings → Environment Variables
  * before deploying. Next.js inlines them into the bundle at build time.
  */
-function requireEnv(key: string): string {
-  const value = process.env[key];
+function assertDefined(key: string, value: string | undefined): string {
   if (!value) {
     throw new Error(
       `Missing required environment variable: ${key}\n` +
@@ -22,20 +25,20 @@ function requireEnv(key: string): string {
 
 export const env = {
   get apiUrl() {
-    return requireEnv('NEXT_PUBLIC_API_URL');
+    return assertDefined('NEXT_PUBLIC_API_URL', process.env.NEXT_PUBLIC_API_URL);
   },
   firebase: {
     get apiKey() {
-      return requireEnv('NEXT_PUBLIC_FIREBASE_API_KEY');
+      return assertDefined('NEXT_PUBLIC_FIREBASE_API_KEY', process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
     },
     get authDomain() {
-      return requireEnv('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
+      return assertDefined('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
     },
     get projectId() {
-      return requireEnv('NEXT_PUBLIC_FIREBASE_PROJECT_ID');
+      return assertDefined('NEXT_PUBLIC_FIREBASE_PROJECT_ID', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
     },
     get appId() {
-      return requireEnv('NEXT_PUBLIC_FIREBASE_APP_ID');
+      return assertDefined('NEXT_PUBLIC_FIREBASE_APP_ID', process.env.NEXT_PUBLIC_FIREBASE_APP_ID);
     },
   },
 };
