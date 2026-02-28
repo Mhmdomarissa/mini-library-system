@@ -280,15 +280,17 @@ Semantic book search using OpenAI embeddings and cosine similarity.
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "bookId": "...",
-      "title": "...",
-      "author": "...",
-      "genre": "...",
-      "similarityScore": 0.87
-    }
-  ]
+  "data": {
+    "books": [
+      {
+        "bookId": "...",
+        "title": "...",
+        "author": "...",
+        "genre": "...",
+        "similarityScore": 0.87
+      }
+    ]
+  }
 }
 ```
 
@@ -299,13 +301,21 @@ Semantic book search using OpenAI embeddings and cosine similarity.
 
 ---
 
-# **Recommendations API Contract**
+---
 
-## **GET /recommendations**
+## **GET /api/borrow/history**
 
-Get AI-powered book recommendations for the authenticated user.
+Get the authenticated user's own borrow history.
 
-- **Auth:** member only
+- **Auth:** member, admin, librarian
+
+**Query parameters:**
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | string | Filter by `borrowed`, `returned`, `overdue` |
+| page | number | Page number (default: 1) |
+| limit | number | Items per page (default: 10) |
 
 **Response `200`:**
 
@@ -313,8 +323,49 @@ Get AI-powered book recommendations for the authenticated user.
 {
   "success": true,
   "data": {
-    "books": [],
-    "reason": "Based on your borrow history"
+    "borrows": [],
+    "pagination": { "page": 1, "limit": 10, "totalPages": 1, "totalItems": 5 }
   }
 }
 ```
+
+---
+
+# **Admin API Contract**
+
+## **GET /api/admin/borrow**
+
+View all borrow records across all users.
+
+- **Auth:** admin, librarian
+
+**Query parameters:**
+
+| Param | Type | Description |
+| --- | --- | --- |
+| status | string | Filter by `borrowed`, `returned`, `overdue` |
+| overdue | boolean | `true` to return only past-due active borrows |
+| userId | string | Filter by user ObjectId |
+| bookId | string | Filter by book ObjectId |
+| page | number | Page number (default: 1) |
+| limit | number | Items per page (default: 10) |
+
+**Response `200`:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "borrows": [],
+    "pagination": { "page": 1, "limit": 10, "totalPages": 1, "totalItems": 20 }
+  }
+}
+```
+
+---
+
+# **Planned (Not Yet Implemented)**
+
+## **GET /api/recommendations** ⏳
+
+AI-powered book recommendations based on the user's borrow history. Planned for a future milestone.

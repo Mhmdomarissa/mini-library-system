@@ -56,6 +56,8 @@ Book {
   status: "available" | "out_of_stock" | "archived"
   createdBy: ObjectId (ref User)
   updatedBy: ObjectId (ref User)
+  isDeleted: boolean
+  deletedAt: Date | null
   createdAt: Date
   updatedAt: Date
   embedding: number[]

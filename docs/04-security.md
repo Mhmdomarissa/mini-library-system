@@ -90,11 +90,12 @@ Why?
 # **Additional Security Measures**
 
 - Helmet (HTTP security headers)
-- CORS configuration
-- Rate limiting
-- Environment variable isolation
+- CORS restricted to `ALLOWED_ORIGINS` environment variable (comma-separated list of allowed origins)
+- Rate limiting (express-rate-limit, per-IP)
+- Trust proxy set to `1` for Railway / PaaS reverse-proxy compatibility
+- Environment variable isolation (`.env` not committed, `.env.example` provided)
 - Centralized error handling
-- Logging system (Winston)
+- Logging system (Winston, console transport only in production)
 
 # **Logging Strategy**
 

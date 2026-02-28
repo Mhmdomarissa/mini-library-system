@@ -41,9 +41,9 @@
 
 ## AI Features
 
-- Smart book recommendations
-- Natural language search
-- AI-generated book summaries
+- Natural language semantic search ✅ (implemented — OpenAI embeddings + cosine similarity)
+- Smart book recommendations ⏳ (planned — future milestone)
+- AI-generated book summaries ⏳ (planned — future milestone)
 
 # Non-Functional Requirements
 
