@@ -173,10 +173,10 @@ export default function HistoryPage() {
                           <Button
                             size="sm"
                             variant={isOverdue ? 'destructive' : 'outline'}
-                            disabled={returnBook.isPending}
+                            disabled={returnBook.isPending && returnBook.variables === record._id}
                             onClick={() => handleReturn(record._id)}
                           >
-                            {returnBook.isPending
+                            {returnBook.isPending && returnBook.variables === record._id
                               ? <Loader2 className="h-3 w-3 animate-spin" />
                               : 'Return'}
                           </Button>

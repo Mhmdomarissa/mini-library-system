@@ -191,10 +191,10 @@ export default function DashboardPage() {
                   {role === 'member' ? (
                     <Button
                       size="sm"
-                      disabled={book.availableCopies === 0 || borrowBook.isPending}
+                      disabled={book.availableCopies === 0 || (borrowBook.isPending && borrowBook.variables === book._id)}
                       onClick={() => handleBorrow(book._id)}
                     >
-                      {borrowBook.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Borrow'}
+                      {borrowBook.isPending && borrowBook.variables === book._id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Borrow'}
                     </Button>
                   ) : (
                     <Tooltip>

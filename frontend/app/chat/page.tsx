@@ -11,6 +11,7 @@ import { AppLayout } from '@/components/layout';
 import { PageHeader } from '@/components/shared';
 import { useAuth } from '@/features/auth';
 import { useSendMessage } from '@/features/chat';
+import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import type { ChatMessage, ChatSource } from '@/types';
 
@@ -32,7 +33,7 @@ function SourceCard({ source }: { source: ChatSource }) {
 
 // ── Welcome screen shown when no messages yet ─────────────────────────────────
 
-function WelcomeScreen() {
+function WelcomeScreen({ onSelect }: { onSelect: (text: string) => void }) {
   const suggestions = [
     'Recommend a mystery novel',
     'What sci-fi books do you have?',
@@ -57,7 +58,11 @@ function WelcomeScreen() {
           <Badge
             key={s}
             variant="outline"
-            className="cursor-default rounded-full px-3 py-1 text-xs"
+            role="button"
+            tabIndex={0}
+            className="cursor-pointer rounded-full px-3 py-1 text-xs transition-colors hover:bg-accent hover:text-accent-foreground"
+            onClick={() => onSelect(s)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(s); } }}
           >
             &ldquo;{s}&rdquo;
           </Badge>
@@ -189,10 +194,16 @@ export default function ChatPage() {
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, assistantMsg]);
-    } catch {
+    } catch (err: unknown) {
       // Remove the optimistic user message on failure
       setMessages((prev) => prev.slice(0, -1));
-      toast.error('Could not reach the librarian. Please try again.');
+      if (err instanceof ApiError && err.status === 429) {
+        toast.error('Rate limit reached', {
+          description: 'Max 10 questions per 15 minutes. Please wait and try again.',
+        });
+      } else {
+        toast.error('Could not reach the librarian. Please try again.');
+      }
     }
   };
 
@@ -233,7 +244,7 @@ export default function ChatPage() {
         {/* Message list */}
         <div className="flex-1 overflow-y-auto rounded-xl border bg-background p-4">
           {messages.length === 0 ? (
-            <WelcomeScreen />
+            <WelcomeScreen onSelect={(text) => { setInput(text); setTimeout(() => textareaRef.current?.focus(), 0); }} />
           ) : (
             <div className="flex flex-col gap-5">
               {messages.map((msg, i) => (
