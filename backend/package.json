@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
+    "build": "./node_modules/.bin/tsc",
     "start": "node dist/server.js",
     "dev": "./node_modules/.bin/nodemon --watch src --ext ts --exec ./node_modules/.bin/ts-node src/server.ts",
     "lint": "eslint src/**/*.ts",
