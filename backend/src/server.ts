@@ -57,9 +57,17 @@ const start = async (): Promise<void> => {
 
 // ── Global safety nets ────────────────────────────────────────────
 
+// Helper: safely extract message + stack from any thrown value.
+// Error.message and Error.stack are non-enumerable — passing { err } to Winston
+// serialises as {} because JSON.stringify skips non-enumerable props.
+const serializeError = (e: unknown): { message: string; stack?: string } => ({
+  message: e instanceof Error ? e.message : String(e),
+  stack: e instanceof Error ? e.stack : undefined,
+});
+
 // Catch any unhandled promise rejection (e.g. DB query outside try/catch)
 process.on('unhandledRejection', (reason: unknown) => {
-  logger.error('Unhandled promise rejection', { reason });
+  logger.error('Unhandled promise rejection', serializeError(reason));
   // Let the process exit so a process manager (PM2 / k8s) can restart it
   process.exit(1);
 });
@@ -71,6 +79,6 @@ process.on('uncaughtException', (err: Error) => {
 });
 
 start().catch((err: unknown) => {
-  logger.error('Failed to start server', { err });
+  logger.error('Failed to start server', serializeError(err));
   process.exit(1);
 });

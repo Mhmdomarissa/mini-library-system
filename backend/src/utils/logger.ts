@@ -29,10 +29,11 @@ const logger = createLogger({
   ),
 
   transports: [
+    // Console is the only transport — Railway / Render capture stdout natively.
+    // A File transport would require a `logs/` directory that does not exist in
+    // ephemeral containers and would throw ENOENT at module-load time, crashing
+    // the server before it even reaches connectDB().
     new transports.Console(),
-    // In production, also write errors to a persistent file so they survive
-    // container restarts before the log shipper picks them up.
-    ...(isProduction ? [new transports.File({ filename: 'logs/error.log', level: 'error' })] : []),
   ],
 });
 
