@@ -1,4 +1,4 @@
-import { getFirebaseAuth } from './firebase';
+import { getFirebaseAuth, authReady } from './firebase';
 import { env } from './env';
 
 // ── Error class ────────────────────────────────────────────────────────────────
@@ -17,6 +17,10 @@ export class ApiError extends Error {
 // ── Token helper ───────────────────────────────────────────────────────────────
 
 async function getToken(): Promise<string | null> {
+  // Wait for Firebase Auth to determine the initial auth state so we never
+  // send a request before currentUser has been hydrated from persistence.
+  await authReady;
+
   const user = getFirebaseAuth().currentUser;
   if (!user) return null;
   // Pass false (default) — Firebase SDK uses the cached token and auto-renews
@@ -42,10 +46,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const body = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    // 401 — token expired / invalid — let the AuthContext handle sign-out
-    if (res.status === 401) {
-      await getFirebaseAuth().signOut().catch(() => {});
-    }
     throw new ApiError(
       body.message ?? `Request failed (${res.status})`,
       res.status,
