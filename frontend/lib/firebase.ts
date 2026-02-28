@@ -1,16 +1,23 @@
-import { getApps, initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getApps, initializeApp, type FirebaseApp } from 'firebase/app';
+import { getAuth, type Auth } from 'firebase/auth';
 import { env } from './env';
 
-const firebaseConfig = {
-  apiKey: env.firebase.apiKey,
-  authDomain: env.firebase.authDomain,
-  projectId: env.firebase.projectId,
-  appId: env.firebase.appId,
-};
+// Lazily initialised so that importing this module never executes env validation
+// at module-load time (which would crash Next.js static page prerendering).
+let _auth: Auth | undefined;
 
-// Prevent duplicate initialization in Next.js hot-reload cycles
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+export function getFirebaseAuth(): Auth {
+  if (_auth) return _auth;
 
-export const auth = getAuth(app);
-export default app;
+  const app: FirebaseApp =
+    getApps()[0] ??
+    initializeApp({
+      apiKey: env.firebase.apiKey,
+      authDomain: env.firebase.authDomain,
+      projectId: env.firebase.projectId,
+      appId: env.firebase.appId,
+    });
+
+  _auth = getAuth(app);
+  return _auth;
+}

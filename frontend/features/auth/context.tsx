@@ -14,7 +14,7 @@ import {
   User as FirebaseUser,
 } from 'firebase/auth';
 import Cookies from 'js-cookie';
-import { auth } from '@/lib/firebase';
+import { getFirebaseAuth } from '@/lib/firebase';
 import { api } from '@/lib/api';
 import type { User, UserRole } from '@/types';
 
@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (firebaseUser) => {
       if (firebaseUser) {
         try {
           // Fetch the backend user profile (includes role)
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           Cookies.set('__role', profile.role, cookieOpts);
         } catch {
           // Token invalid / user deleted on backend — sign out cleanly
-          await signOut(auth);
+          await signOut(getFirebaseAuth());
           setAuthUser(null);
           Cookies.remove('__session');
           Cookies.remove('__role');
@@ -82,12 +82,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    await signInWithEmailAndPassword(getFirebaseAuth(), email, password);
     // onAuthStateChanged listener above handles the rest
   };
 
   const logOut = async () => {
-    await signOut(auth);
+    await signOut(getFirebaseAuth());
   };
 
   return (
