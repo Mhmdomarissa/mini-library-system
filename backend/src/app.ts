@@ -8,11 +8,12 @@ import { AppError } from './utils/AppError';
 import { sendError, sendSuccess } from './utils/response';
 import logger from './utils/logger';
 import { requestLogger } from './middleware/requestLogger';
-import { generalLimiter, strictLimiter, adminLimiter } from './middleware/rateLimiter';
+import { generalLimiter, strictLimiter, adminLimiter, chatLimiter } from './middleware/rateLimiter';
 import bookRoutes from './routes/book.routes';
 import borrowRoutes from './routes/borrow.routes';
 import adminRoutes from './routes/admin.routes';
 import authRoutes from './routes/auth.routes';
+import chatRoutes from './routes/chat.routes';
 
 const app: Application = express();
 
@@ -124,6 +125,7 @@ app.use('/api/auth', generalLimiter, authRoutes);
 app.use('/api/books', generalLimiter, bookRoutes);
 app.use('/api/borrow', strictLimiter, borrowRoutes);
 app.use('/api/admin', adminLimiter, adminRoutes);
+app.use('/api/chat', chatLimiter, chatRoutes);
 
 // 404 handler — must be registered AFTER all routes
 app.use((_req: Request, res: Response) => {

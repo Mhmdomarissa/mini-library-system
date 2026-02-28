@@ -70,3 +70,13 @@ export type AdminListBorrowsQuery = z.infer<typeof adminListBorrowsQuerySchema>;
 export type SemanticSearchInput = z.infer<typeof semanticSearchSchema>;
 export type UpdateUserRoleInput = z.infer<typeof updateUserRoleSchema>;
 export type UpdateUserStatusInput = z.infer<typeof updateUserStatusSchema>;
+
+// ── Chat ───────────────────────────────────────────────────────────────────
+export const chatSchema = z.object({
+  message: z
+    .string()
+    .min(1, 'message is required')
+    .max(1000, 'message must be at most 1000 characters'),
+});
+
+export type ChatInput = z.infer<typeof chatSchema>;

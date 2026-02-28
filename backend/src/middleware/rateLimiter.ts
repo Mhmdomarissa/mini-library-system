@@ -66,3 +66,17 @@ export const adminLimiter = rateLimit({
   skip: skipInDev,
   handler: rateLimitHandler,
 });
+
+/**
+ * chatLimiter — applied to POST /api/chat.
+ * AI completions are expensive; 10 per IP per 15 minutes is generous
+ * for legitimate use while protecting API costs.
+ */
+export const chatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: skipInDev,
+  handler: rateLimitHandler,
+});

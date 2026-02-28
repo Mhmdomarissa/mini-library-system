@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "Mini Library System \u2014 Full API",
+    "name": "Mini Library System — Full API",
     "_postman_id": "mini-library-system-full-api",
-    "description": "Full test suite for the Mini Library System backend (Books + Borrow/Return + Admin).\n\n**Setup:** Import this collection AND `mini-library-system.postman_environment.json`.\n\nThe collection auto-refreshes the Firebase admin token before each request. Member/Member2 tokens are saved via the Auth folder sign-in requests.\n\n**Run order (Collection Runner):**\n1. \ud83d\udd10 Auth \u2014 sign in all three users\n2. \ud83d\udcda Books \u2014 11 tests (creates+deletes Clean Code book)\n3. \ud83d\udd04 Borrow / Return \u2014 16 tests (full borrow lifecycle)\n4. \ud83c\udfdb Admin \u2014 4 tests (admin borrow list + filters)\n\nTotal: 34 tests across 5 folders (added T12-T14 semantic search).",
+    "description": "Full test suite for the Mini Library System backend.\n\nSetup: Import this collection AND mini-library-system.postman_environment.json.\n\nAuto-refreshes Firebase admin token before each request.\n\nRun order: Auth > Books > Borrow/Return > Admin > Fine Calculation > Admin Users (AU01-AU04) > Chat (C01-C04)\n\nTotal: 42+ tests across 7 folders.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -70,6 +70,11 @@
       "key": "fine_borrow_id_c",
       "value": "",
       "type": "default"
+    },
+    {
+      "key": "test_user_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "auth": {
@@ -111,7 +116,7 @@
   ],
   "item": [
     {
-      "name": "\ud83d\udd10 Auth",
+      "name": "🔐 Auth",
       "item": [
         {
           "name": "Sign Up (run once)",
@@ -162,11 +167,11 @@
                 }
               ]
             },
-            "description": "Creates the test user. Run only once \u2014 will fail with EMAIL_EXISTS on subsequent runs (that's fine, just skip it)."
+            "description": "Creates the test user. Run only once — will fail with EMAIL_EXISTS on subsequent runs (that's fine, just skip it)."
           }
         },
         {
-          "name": "Sign In \u2192 get token",
+          "name": "Sign In → get token",
           "event": [
             {
               "listen": "test",
@@ -176,7 +181,7 @@
                   "const json = pm.response.json();",
                   "pm.test('idToken present', () => pm.expect(json.idToken).to.be.a('string'));",
                   "pm.collectionVariables.set('admin_token', json.idToken);",
-                  "console.log('\u2705 Token saved to collection variable admin_token');"
+                  "console.log('✅ Token saved to collection variable admin_token');"
                 ]
               }
             }
@@ -217,7 +222,7 @@
           }
         },
         {
-          "name": "Sign In as Member \u2192 get token",
+          "name": "Sign In as Member → get token",
           "event": [
             {
               "listen": "test",
@@ -227,7 +232,7 @@
                   "const json = pm.response.json();",
                   "pm.test('idToken present', () => pm.expect(json.idToken).to.be.a('string'));",
                   "pm.collectionVariables.set('member_token', json.idToken);",
-                  "console.log('\u2705 Member token saved');"
+                  "console.log('✅ Member token saved');"
                 ]
               }
             }
@@ -268,7 +273,7 @@
           }
         },
         {
-          "name": "Sign In as Member2 \u2192 get token",
+          "name": "Sign In as Member2 → get token",
           "event": [
             {
               "listen": "test",
@@ -278,7 +283,7 @@
                   "const json = pm.response.json();",
                   "pm.test('idToken present', () => pm.expect(json.idToken).to.be.a('string'));",
                   "pm.collectionVariables.set('member2_token', json.idToken);",
-                  "console.log('\u2705 Member2 token saved');"
+                  "console.log('✅ Member2 token saved');"
                 ]
               }
             }
@@ -321,10 +326,10 @@
       ]
     },
     {
-      "name": "\ud83d\udcda Books",
+      "name": "📚 Books",
       "item": [
         {
-          "name": "TEST 01 \u2014 401 No Token",
+          "name": "TEST 01 — 401 No Token",
           "event": [
             {
               "listen": "test",
@@ -355,11 +360,11 @@
                 "books"
               ]
             },
-            "description": "No Authorization header \u2192 must return 401.\n\nProves: auth middleware rejects requests without a token."
+            "description": "No Authorization header → must return 401.\n\nProves: auth middleware rejects requests without a token."
           }
         },
         {
-          "name": "TEST 02 \u2014 403 Wrong Role (member)",
+          "name": "TEST 02 — 403 Wrong Role (member)",
           "event": [
             {
               "listen": "prerequest",
@@ -415,11 +420,11 @@
                 "books"
               ]
             },
-            "description": "Member token on a create-book endpoint \u2192 must return 403.\n\nProves: requireRole(['admin','librarian']) guard works."
+            "description": "Member token on a create-book endpoint → must return 403.\n\nProves: requireRole(['admin','librarian']) guard works."
           }
         },
         {
-          "name": "TEST 03 \u2014 400 Validation Error",
+          "name": "TEST 03 — 400 Validation Error",
           "event": [
             {
               "listen": "test",
@@ -449,7 +454,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Only Title \u2014 missing all other required fields\"\n}"
+              "raw": "{\n  \"title\": \"Only Title — missing all other required fields\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books",
@@ -461,11 +466,11 @@
                 "books"
               ]
             },
-            "description": "Body has only `title`, missing author/isbn/genre/publishedYear/totalCopies \u2192 Zod returns 400 with an errors array listing every missing field."
+            "description": "Body has only `title`, missing author/isbn/genre/publishedYear/totalCopies → Zod returns 400 with an errors array listing every missing field."
           }
         },
         {
-          "name": "TEST 04 \u2014 201 Create Book",
+          "name": "TEST 04 — 201 Create Book",
           "event": [
             {
               "listen": "test",
@@ -481,7 +486,7 @@
                   "  pm.expect(json.data.book.availableCopies).to.equal(5);",
                   "  // Save the ID for subsequent tests",
                   "  pm.collectionVariables.set('book_id', json.data.book._id);",
-                  "  console.log('\u2705 book_id saved:', json.data.book._id);",
+                  "  console.log('✅ book_id saved:', json.data.book._id);",
                   "});"
                 ]
               }
@@ -509,11 +514,11 @@
                 "books"
               ]
             },
-            "description": "Admin creates a book with all required fields \u2192 201 with full book object.\n\nThe `_id` is automatically saved to `{{book_id}}` for tests 06\u201311."
+            "description": "Admin creates a book with all required fields → 201 with full book object.\n\nThe `_id` is automatically saved to `{{book_id}}` for tests 06–11."
           }
         },
         {
-          "name": "TEST 05 \u2014 200 List Books",
+          "name": "TEST 05 — 200 List Books",
           "event": [
             {
               "listen": "test",
@@ -574,11 +579,11 @@
                 }
               ]
             },
-            "description": "Returns paginated list of all non-deleted books.\n\nOptional query params (enable them to test filtering):\n- `search` \u2014 full-text search across title/author/description\n- `genre` \u2014 exact match\n- `status` \u2014 available | out_of_stock | archived"
+            "description": "Returns paginated list of all non-deleted books.\n\nOptional query params (enable them to test filtering):\n- `search` — full-text search across title/author/description\n- `genre` — exact match\n- `status` — available | out_of_stock | archived"
           }
         },
         {
-          "name": "TEST 06 \u2014 200 Get Book by ID",
+          "name": "TEST 06 — 200 Get Book by ID",
           "event": [
             {
               "listen": "test",
@@ -613,7 +618,7 @@
           }
         },
         {
-          "name": "TEST 07 \u2014 404 Book Not Found",
+          "name": "TEST 07 — 404 Book Not Found",
           "event": [
             {
               "listen": "test",
@@ -641,11 +646,11 @@
                 "000000000000000000000000"
               ]
             },
-            "description": "A valid-format but non-existent MongoDB ObjectId \u2192 404.\n\nProves: service throws AppError.notFound() which the global error handler maps to 404."
+            "description": "A valid-format but non-existent MongoDB ObjectId → 404.\n\nProves: service throws AppError.notFound() which the global error handler maps to 404."
           }
         },
         {
-          "name": "TEST 08 \u2014 200 Update Book",
+          "name": "TEST 08 — 200 Update Book",
           "event": [
             {
               "listen": "test",
@@ -684,11 +689,11 @@
                 "{{book_id}}"
               ]
             },
-            "description": "Partial update \u2014 only provided fields are changed, others remain intact.\n\nProves: PATCH correctly applies partial updates via `$set`."
+            "description": "Partial update — only provided fields are changed, others remain intact.\n\nProves: PATCH correctly applies partial updates via `$set`."
           }
         },
         {
-          "name": "TEST 09 \u2014 409 Duplicate ISBN",
+          "name": "TEST 09 — 409 Duplicate ISBN",
           "event": [
             {
               "listen": "test",
@@ -712,7 +717,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Clean Code \u2014 Duplicate\",\n  \"author\": \"Robert C. Martin\",\n  \"isbn\": \"978-0132350884\",\n  \"genre\": \"Technology\",\n  \"publishedYear\": 2008,\n  \"totalCopies\": 1\n}"
+              "raw": "{\n  \"title\": \"Clean Code — Duplicate\",\n  \"author\": \"Robert C. Martin\",\n  \"isbn\": \"978-0132350884\",\n  \"genre\": \"Technology\",\n  \"publishedYear\": 2008,\n  \"totalCopies\": 1\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books",
@@ -724,11 +729,11 @@
                 "books"
               ]
             },
-            "description": "Same ISBN as the book created in TEST 04 \u2192 409 Conflict.\n\nProves: service-level ISBN uniqueness check throws AppError.conflict()."
+            "description": "Same ISBN as the book created in TEST 04 → 409 Conflict.\n\nProves: service-level ISBN uniqueness check throws AppError.conflict()."
           }
         },
         {
-          "name": "TEST 10 \u2014 200 Delete Book",
+          "name": "TEST 10 — 200 Delete Book",
           "event": [
             {
               "listen": "test",
@@ -762,7 +767,7 @@
           }
         },
         {
-          "name": "TEST 11 \u2014 404 Get Deleted Book",
+          "name": "TEST 11 — 404 Get Deleted Book",
           "event": [
             {
               "listen": "test",
@@ -790,11 +795,11 @@
                 "{{book_id}}"
               ]
             },
-            "description": "Same ID as TEST 10 \u2014 now returns 404 because the book is soft-deleted.\n\nProves: soft-delete hides the book from all read paths (isDeleted:false filter)."
+            "description": "Same ID as TEST 10 — now returns 404 because the book is soft-deleted.\n\nProves: soft-delete hides the book from all read paths (isDeleted:false filter)."
           }
         },
         {
-          "name": "TEST 12 \u2014 200 Semantic Search (valid query)",
+          "name": "TEST 12 — 200 Semantic Search (valid query)",
           "event": [
             {
               "listen": "test",
@@ -860,7 +865,7 @@
           }
         },
         {
-          "name": "TEST 13 \u2014 400 Semantic Search (empty query)",
+          "name": "TEST 13 — 400 Semantic Search (empty query)",
           "event": [
             {
               "listen": "test",
@@ -914,7 +919,7 @@
           }
         },
         {
-          "name": "TEST 14 \u2014 401 Semantic Search (no token)",
+          "name": "TEST 14 — 401 Semantic Search (no token)",
           "event": [
             {
               "listen": "test",
@@ -961,11 +966,11 @@
       "description": "CRUD tests (T01-T11) + Semantic Search tests (T12-T14). Total: 14 requests."
     },
     {
-      "name": "\ud83d\udd04 Borrow / Return",
-      "description": "Full borrow/return lifecycle.\n\n**Setup (run before this folder):** The Books folder must have run to populate {{book_id}} \u2014 but Borrow tests use their OWN books created in the prerequest scripts below. Run the Auth folder first so all three tokens are available.\n\n**Run order:** B01\u2192B16 in sequence. The Collection Runner handles this automatically.",
+      "name": "🔄 Borrow / Return",
+      "description": "Full borrow/return lifecycle.\n\n**Setup (run before this folder):** The Books folder must have run to populate {{book_id}} — but Borrow tests use their OWN books created in the prerequest scripts below. Run the Auth folder first so all three tokens are available.\n\n**Run order:** B01→B16 in sequence. The Collection Runner handles this automatically.",
       "item": [
         {
-          "name": "SETUP \u2014 Create 5-copy book",
+          "name": "SETUP — Create 5-copy book",
           "event": [
             {
               "listen": "test",
@@ -975,7 +980,7 @@
                   "const json = pm.response.json();",
                   "pm.test('Book created', () => pm.expect(json.data.book._id).to.be.a('string'));",
                   "pm.collectionVariables.set('borrow_book_id', json.data.book._id);",
-                  "console.log('\u2705 borrow_book_id:', json.data.book._id);"
+                  "console.log('✅ borrow_book_id:', json.data.book._id);"
                 ]
               }
             }
@@ -1000,7 +1005,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Borrow Test Book\",\n  \"author\": \"Test Author\",\n  \"isbn\": \"{{$timestamp}}-BT\",\n  \"genre\": \"Technology\",\n  \"description\": \"Used for borrow tests \u2014 delete after run\",\n  \"publishedYear\": 2024,\n  \"totalCopies\": 5\n}"
+              "raw": "{\n  \"title\": \"Borrow Test Book\",\n  \"author\": \"Test Author\",\n  \"isbn\": \"{{$timestamp}}-BT\",\n  \"genre\": \"Technology\",\n  \"description\": \"Used for borrow tests — delete after run\",\n  \"publishedYear\": 2024,\n  \"totalCopies\": 5\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/books",
@@ -1016,7 +1021,7 @@
           }
         },
         {
-          "name": "SETUP \u2014 Create 1-copy book",
+          "name": "SETUP — Create 1-copy book",
           "event": [
             {
               "listen": "test",
@@ -1026,7 +1031,7 @@
                   "const json = pm.response.json();",
                   "pm.test('Book created', () => pm.expect(json.data.book._id).to.be.a('string'));",
                   "pm.collectionVariables.set('onecopy_book_id', json.data.book._id);",
-                  "console.log('\u2705 onecopy_book_id:', json.data.book._id);"
+                  "console.log('✅ onecopy_book_id:', json.data.book._id);"
                 ]
               }
             }
@@ -1067,7 +1072,7 @@
           }
         },
         {
-          "name": "SETUP \u2014 Create archived book",
+          "name": "SETUP — Create archived book",
           "event": [
             {
               "listen": "test",
@@ -1076,7 +1081,7 @@
                   "pm.test('Status 201 Created', () => pm.response.to.have.status(201));",
                   "const json = pm.response.json();",
                   "pm.collectionVariables.set('archived_book_id', json.data.book._id);",
-                  "console.log('\u2705 archived_book_id:', json.data.book._id);"
+                  "console.log('✅ archived_book_id:', json.data.book._id);"
                 ]
               }
             }
@@ -1117,14 +1122,14 @@
           }
         },
         {
-          "name": "B01 \u2014 401 No Token",
+          "name": "B01 — 401 No Token",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B01 \u2014 Status 401', () => pm.response.to.have.status(401));",
-                  "pm.test('B01 \u2014 Unauthorized message', () => {",
+                  "pm.test('B01 — Status 401', () => pm.response.to.have.status(401));",
+                  "pm.test('B01 — Unauthorized message', () => {",
                   "  pm.expect(pm.response.json().message).to.include('Unauthorized');",
                   "});"
                 ]
@@ -1148,18 +1153,18 @@
                 "{{borrow_book_id}}"
               ]
             },
-            "description": "No Authorization header on borrow endpoint \u2192 401.\n\nProves: authenticate middleware rejects unauthenticated requests."
+            "description": "No Authorization header on borrow endpoint → 401.\n\nProves: authenticate middleware rejects unauthenticated requests."
           }
         },
         {
-          "name": "B02 \u2014 403 Admin Cannot Borrow",
+          "name": "B02 — 403 Admin Cannot Borrow",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B02 \u2014 Status 403', () => pm.response.to.have.status(403));",
-                  "pm.test('B02 \u2014 Forbidden message', () => {",
+                  "pm.test('B02 — Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('B02 — Forbidden message', () => {",
                   "  pm.expect(pm.response.json().message).to.include('Forbidden');",
                   "});"
                 ]
@@ -1199,18 +1204,18 @@
                 "{{borrow_book_id}}"
               ]
             },
-            "description": "Admin token on a member-only borrow endpoint \u2192 403.\n\nProves: requireRole(['member']) blocks admin from borrowing books."
+            "description": "Admin token on a member-only borrow endpoint → 403.\n\nProves: requireRole(['member']) blocks admin from borrowing books."
           }
         },
         {
-          "name": "B03 \u2014 404 Book Not Found",
+          "name": "B03 — 404 Book Not Found",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B03 \u2014 Status 404', () => pm.response.to.have.status(404));",
-                  "pm.test('B03 \u2014 Not found message', () => {",
+                  "pm.test('B03 — Status 404', () => pm.response.to.have.status(404));",
+                  "pm.test('B03 — Not found message', () => {",
                   "  pm.expect(pm.response.json().message).to.include('not found');",
                   "});"
                 ]
@@ -1250,18 +1255,18 @@
                 "000000000000000000000000"
               ]
             },
-            "description": "Valid-format but non-existent ObjectId as bookId \u2192 404.\n\nProves: service throws AppError.notFound('Book not found')."
+            "description": "Valid-format but non-existent ObjectId as bookId → 404.\n\nProves: service throws AppError.notFound('Book not found')."
           }
         },
         {
-          "name": "B04 \u2014 400 Archived Book",
+          "name": "B04 — 400 Archived Book",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B04 \u2014 Status 400', () => pm.response.to.have.status(400));",
-                  "pm.test('B04 \u2014 Archived message', () => {",
+                  "pm.test('B04 — Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('B04 — Archived message', () => {",
                   "  pm.expect(pm.response.json().message).to.include('archived');",
                   "});"
                 ]
@@ -1301,25 +1306,25 @@
                 "{{archived_book_id}}"
               ]
             },
-            "description": "Member tries to borrow an archived book \u2192 400.\n\nProves: borrow service validates book.status !== 'archived' before proceeding."
+            "description": "Member tries to borrow an archived book → 400.\n\nProves: borrow service validates book.status !== 'archived' before proceeding."
           }
         },
         {
-          "name": "B05 \u2014 201 Successful Borrow",
+          "name": "B05 — 201 Successful Borrow",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B05 \u2014 Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('B05 \u2014 borrowId and dueDate returned', () => {",
+                  "pm.test('B05 — Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('B05 — borrowId and dueDate returned', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json.success).to.be.true;",
                   "  pm.expect(json.data.borrowId).to.be.a('string');",
                   "  pm.expect(json.data.dueDate).to.be.a('string');",
                   "  pm.expect(json.data.message).to.include('Due back by');",
                   "  pm.collectionVariables.set('borrow_id', json.data.borrowId);",
-                  "  console.log('\u2705 borrow_id saved:', json.data.borrowId);",
+                  "  console.log('✅ borrow_id saved:', json.data.borrowId);",
                   "});"
                 ]
               }
@@ -1358,18 +1363,18 @@
                 "{{borrow_book_id}}"
               ]
             },
-            "description": "Member successfully borrows a book \u2192 201 with borrowId and dueDate.\n\nThe borrowId is saved to {{borrow_id}} for use in B08/B09 (return tests).\n\nProves: ACID transaction decrements availableCopies and creates BorrowRecord atomically."
+            "description": "Member successfully borrows a book → 201 with borrowId and dueDate.\n\nThe borrowId is saved to {{borrow_id}} for use in B08/B09 (return tests).\n\nProves: ACID transaction decrements availableCopies and creates BorrowRecord atomically."
           }
         },
         {
-          "name": "B06 \u2014 200 Member Borrow History",
+          "name": "B06 — 200 Member Borrow History",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B06 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('B06 \u2014 History shows active borrow', () => {",
+                  "pm.test('B06 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('B06 — History shows active borrow', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json.success).to.be.true;",
                   "  pm.expect(json.data.borrows).to.be.an('array');",
@@ -1379,7 +1384,7 @@
                   "  pm.expect(active.computedStatus).to.equal('borrowed');",
                   "  pm.expect(active._id).to.equal(pm.collectionVariables.get('borrow_id'));",
                   "});",
-                  "pm.test('B06 \u2014 Pagination present', () => {",
+                  "pm.test('B06 — Pagination present', () => {",
                   "  pm.expect(pm.response.json().data.pagination).to.have.all.keys(",
                   "    'page','limit','totalItems','totalPages','hasNextPage','hasPrevPage'",
                   "  );",
@@ -1412,18 +1417,18 @@
                 "history"
               ]
             },
-            "description": "Member retrieves their own borrow history \u2192 200 with paginated list.\n\nVerifies the borrow from B05 appears as status='borrowed' with computedStatus.\n\nProves: myHistory() scopes results to the authenticated user only."
+            "description": "Member retrieves their own borrow history → 200 with paginated list.\n\nVerifies the borrow from B05 appears as status='borrowed' with computedStatus.\n\nProves: myHistory() scopes results to the authenticated user only."
           }
         },
         {
-          "name": "B07 \u2014 409 Duplicate Active Borrow",
+          "name": "B07 — 409 Duplicate Active Borrow",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B07 \u2014 Status 409', () => pm.response.to.have.status(409));",
-                  "pm.test('B07 \u2014 Conflict message', () => {",
+                  "pm.test('B07 — Status 409', () => pm.response.to.have.status(409));",
+                  "pm.test('B07 — Conflict message', () => {",
                   "  pm.expect(pm.response.json().message).to.include('active borrow');",
                   "});"
                 ]
@@ -1463,18 +1468,18 @@
                 "{{borrow_book_id}}"
               ]
             },
-            "description": "Same member tries to borrow the same book again while already having an active borrow \u2192 409.\n\nProves: service checks for existing active BorrowRecord (and falls back to compound unique index at DB level)."
+            "description": "Same member tries to borrow the same book again while already having an active borrow → 409.\n\nProves: service checks for existing active BorrowRecord (and falls back to compound unique index at DB level)."
           }
         },
         {
-          "name": "B08 \u2014 200 Return Book",
+          "name": "B08 — 200 Return Book",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B08 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('B08 \u2014 BorrowRecord marked returned', () => {",
+                  "pm.test('B08 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('B08 — BorrowRecord marked returned', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json.success).to.be.true;",
                   "  pm.expect(json.data.borrowRecord.status).to.equal('returned');",
@@ -1519,18 +1524,18 @@
                 "{{borrow_id}}"
               ]
             },
-            "description": "Member returns the book borrowed in B05 \u2192 200 with updated BorrowRecord.\n\nProves: ACID transaction marks BorrowRecord as returned and increments book's availableCopies atomically."
+            "description": "Member returns the book borrowed in B05 → 200 with updated BorrowRecord.\n\nProves: ACID transaction marks BorrowRecord as returned and increments book's availableCopies atomically."
           }
         },
         {
-          "name": "B09 \u2014 400 Return Already Returned",
+          "name": "B09 — 400 Return Already Returned",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B09 \u2014 Status 400', () => pm.response.to.have.status(400));",
-                  "pm.test('B09 \u2014 Already returned message', () => {",
+                  "pm.test('B09 — Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('B09 — Already returned message', () => {",
                   "  pm.expect(pm.response.json().message).to.include('already been returned');",
                   "});"
                 ]
@@ -1571,18 +1576,18 @@
                 "{{borrow_id}}"
               ]
             },
-            "description": "Same borrowId as B08 (already returned) \u2192 400.\n\nProves: return service validates record.status !== 'returned' before proceeding."
+            "description": "Same borrowId as B08 (already returned) → 400.\n\nProves: return service validates record.status !== 'returned' before proceeding."
           }
         },
         {
-          "name": "B10 \u2014 200 History Filtered by status=returned",
+          "name": "B10 — 200 History Filtered by status=returned",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B10 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('B10 \u2014 Only returned records', () => {",
+                  "pm.test('B10 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('B10 — Only returned records', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json.success).to.be.true;",
                   "  pm.expect(json.data.borrows).to.be.an('array');",
@@ -1624,23 +1629,23 @@
                 }
               ]
             },
-            "description": "Member's history filtered to returned records only \u2192 200 with only returned borrows.\n\nProves: myHistory() correctly applies the status filter."
+            "description": "Member's history filtered to returned records only → 200 with only returned borrows.\n\nProves: myHistory() correctly applies the status filter."
           }
         },
         {
-          "name": "B11 \u2014 201 Borrow Last Copy \u2192 book out_of_stock",
+          "name": "B11 — 201 Borrow Last Copy → book out_of_stock",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B11 \u2014 Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('B11 \u2014 Borrow created', () => {",
+                  "pm.test('B11 — Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('B11 — Borrow created', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json.success).to.be.true;",
                   "  pm.expect(json.data.borrowId).to.be.a('string');",
                   "  pm.collectionVariables.set('onecopy_borrow_id', json.data.borrowId);",
-                  "  console.log('\u2705 onecopy_borrow_id saved:', json.data.borrowId);",
+                  "  console.log('✅ onecopy_borrow_id saved:', json.data.borrowId);",
                   "});"
                 ]
               }
@@ -1679,18 +1684,18 @@
                 "{{onecopy_book_id}}"
               ]
             },
-            "description": "Member borrows the only copy of the 1-copy book \u2192 201, and book flips to out_of_stock.\n\nAfter this request, you can verify the book status changed:\nGET {{base_url}}/api/books/{{onecopy_book_id}} \u2192 status: out_of_stock\n\nProves: decrementCopies pipeline correctly flips status when availableCopies reaches 0."
+            "description": "Member borrows the only copy of the 1-copy book → 201, and book flips to out_of_stock.\n\nAfter this request, you can verify the book status changed:\nGET {{base_url}}/api/books/{{onecopy_book_id}} → status: out_of_stock\n\nProves: decrementCopies pipeline correctly flips status when availableCopies reaches 0."
           }
         },
         {
-          "name": "B12 \u2014 400 Out of Stock (another user)",
+          "name": "B12 — 400 Out of Stock (another user)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B12 \u2014 Status 400', () => pm.response.to.have.status(400));",
-                  "pm.test('B12 \u2014 Out of stock message', () => {",
+                  "pm.test('B12 — Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('B12 — Out of stock message', () => {",
                   "  pm.expect(pm.response.json().message).to.include('No available copies');",
                   "});"
                 ]
@@ -1730,17 +1735,17 @@
                 "{{onecopy_book_id}}"
               ]
             },
-            "description": "A different member (member2) tries to borrow the same book that is now out_of_stock \u2192 400.\n\nProves: borrow service checks availableCopies <= 0 and returns AppError.badRequest()."
+            "description": "A different member (member2) tries to borrow the same book that is now out_of_stock → 400.\n\nProves: borrow service checks availableCopies <= 0 and returns AppError.badRequest()."
           }
         },
         {
-          "name": "B13 \u2014 400 Borrow Limit Exceeded",
+          "name": "B13 — 400 Borrow Limit Exceeded",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B13 \u2014 Status 400 or 409 (limit or already borrowed)', () => {",
+                  "pm.test('B13 — Status 400 or 409 (limit or already borrowed)', () => {",
                   "  pm.expect(pm.response.code).to.be.oneOf([400, 409]);",
                   "});"
                 ],
@@ -1785,14 +1790,14 @@
           }
         },
         {
-          "name": "TEARDOWN \u2014 Return 1-copy book",
+          "name": "TEARDOWN — Return 1-copy book",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Teardown \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Teardown \u2014 Record returned', () => {",
+                  "pm.test('Teardown — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Teardown — Record returned', () => {",
                   "  pm.expect(pm.response.json().data.borrowRecord.status).to.equal('returned');",
                   "});"
                 ]
@@ -1833,17 +1838,17 @@
                 "{{onecopy_borrow_id}}"
               ]
             },
-            "description": "Returns the 1-copy book borrow so the book becomes available again \u2014 needed before soft-delete."
+            "description": "Returns the 1-copy book borrow so the book becomes available again — needed before soft-delete."
           }
         },
         {
-          "name": "TEARDOWN \u2014 Delete borrow test book",
+          "name": "TEARDOWN — Delete borrow test book",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Teardown \u2014 Status 200', () => pm.response.to.have.status(200));"
+                  "pm.test('Teardown — Status 200', () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -1876,13 +1881,13 @@
           }
         },
         {
-          "name": "TEARDOWN \u2014 Delete 1-copy book",
+          "name": "TEARDOWN — Delete 1-copy book",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Teardown \u2014 Status 200', () => pm.response.to.have.status(200));"
+                  "pm.test('Teardown — Status 200', () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -1915,13 +1920,13 @@
           }
         },
         {
-          "name": "TEARDOWN \u2014 Delete archived book",
+          "name": "TEARDOWN — Delete archived book",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Teardown \u2014 Status 200', () => pm.response.to.have.status(200));"
+                  "pm.test('Teardown — Status 200', () => pm.response.to.have.status(200));"
                 ]
               }
             }
@@ -1956,18 +1961,18 @@
       ]
     },
     {
-      "name": "\ud83c\udfdb Admin",
+      "name": "🏛 Admin",
       "description": "Admin-only endpoints for managing the borrow system.\n\nAll requests require admin_token. Run AFTER the Borrow/Return folder so there is data to view.",
       "item": [
         {
-          "name": "B13 \u2014 403 Member on Admin Route",
+          "name": "B13 — 403 Member on Admin Route",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B13 \u2014 Status 403', () => pm.response.to.have.status(403));",
-                  "pm.test('B13 \u2014 Forbidden message', () => {",
+                  "pm.test('B13 — Status 403', () => pm.response.to.have.status(403));",
+                  "pm.test('B13 — Forbidden message', () => {",
                   "  pm.expect(pm.response.json().message).to.include('Forbidden');",
                   "});"
                 ]
@@ -1998,18 +2003,18 @@
                 "borrow"
               ]
             },
-            "description": "Member token on admin borrow list \u2192 403.\n\nProves: requireRole(['admin','librarian']) blocks members from admin routes."
+            "description": "Member token on admin borrow list → 403.\n\nProves: requireRole(['admin','librarian']) blocks members from admin routes."
           }
         },
         {
-          "name": "B14 \u2014 200 Admin List All Borrows",
+          "name": "B14 — 200 Admin List All Borrows",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B14 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('B14 \u2014 Pagination and borrows present', () => {",
+                  "pm.test('B14 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('B14 — Pagination and borrows present', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json.success).to.be.true;",
                   "  pm.expect(json.data.borrows).to.be.an('array');",
@@ -2017,7 +2022,7 @@
                   "    'page','limit','totalItems','totalPages','hasNextPage','hasPrevPage'",
                   "  );",
                   "});",
-                  "pm.test('B14 \u2014 Borrow records have user and book populated', () => {",
+                  "pm.test('B14 — Borrow records have user and book populated', () => {",
                   "  const borrows = pm.response.json().data.borrows;",
                   "  if (borrows.length > 0) {",
                   "    pm.expect(borrows[0].userId).to.have.property('email');",
@@ -2082,18 +2087,18 @@
                 }
               ]
             },
-            "description": "Admin retrieves all borrow records across all users \u2192 200 with paginated + populated list.\n\nOptional filters (enable the disabled query params to test them):\n- `status` \u2014 borrowed | returned\n- `userId` \u2014 filter by specific user\n- `bookId` \u2014 filter by specific book\n- `overdue` \u2014 true returns only borrowed records past dueDate\n\nProves: adminList() returns all records regardless of user."
+            "description": "Admin retrieves all borrow records across all users → 200 with paginated + populated list.\n\nOptional filters (enable the disabled query params to test them):\n- `status` — borrowed | returned\n- `userId` — filter by specific user\n- `bookId` — filter by specific book\n- `overdue` — true returns only borrowed records past dueDate\n\nProves: adminList() returns all records regardless of user."
           }
         },
         {
-          "name": "B15 \u2014 200 Admin Filter status=returned",
+          "name": "B15 — 200 Admin Filter status=returned",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B15 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('B15 \u2014 Only returned records', () => {",
+                  "pm.test('B15 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('B15 — Only returned records', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json.success).to.be.true;",
                   "  json.data.borrows.forEach(b => {",
@@ -2134,18 +2139,18 @@
                 }
               ]
             },
-            "description": "Admin filters borrow list by status=returned \u2192 200 with only returned records.\n\nProves: adminList() correctly applies status filter in the repository query."
+            "description": "Admin filters borrow list by status=returned → 200 with only returned records.\n\nProves: adminList() correctly applies status filter in the repository query."
           }
         },
         {
-          "name": "B16 \u2014 200 Admin Filter overdue=true",
+          "name": "B16 — 200 Admin Filter overdue=true",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('B16 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('B16 \u2014 All records are overdue', () => {",
+                  "pm.test('B16 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('B16 — All records are overdue', () => {",
                   "  const json = pm.response.json();",
                   "  pm.expect(json.success).to.be.true;",
                   "  json.data.borrows.forEach(b => {",
@@ -2186,28 +2191,28 @@
                 }
               ]
             },
-            "description": "Admin filters for overdue borrows (borrowed + past dueDate) \u2192 200.\n\nIn a new test environment borrows will not be overdue yet, so the list is empty \u2014 that is the correct behaviour. The test only validates the HTTP 200 shape.\n\nProves: repository resolves overdue filter as status=borrowed + dueDate<now."
+            "description": "Admin filters for overdue borrows (borrowed + past dueDate) → 200.\n\nIn a new test environment borrows will not be overdue yet, so the list is empty — that is the correct behaviour. The test only validates the HTTP 200 shape.\n\nProves: repository resolves overdue filter as status=borrowed + dueDate<now."
           }
         }
       ]
     },
     {
-      "name": "\ud83e\uddfe Fine Calculation",
-      "description": "Phase 3 fine calculation tests.\n\nFine is computed dynamically \u2014 never stored in the DB.\n\nFormula: daysOverdue = Math.ceil((settledAt - dueDate) / MS_PER_DAY), fine = daysOverdue \u00d7 FINE_PER_DAY (env var, default 1)\n\nF01-F03: on-time return \u2192 fine = 0\nF04-F06: overdue return \u2192 fine > 0 (requires DB backdating, see F04 description)\nF07-F08: still-borrowed overdue \u2192 active history shows fine\nF09: admin overdue list shows fine",
+      "name": "🧾 Fine Calculation",
+      "description": "Phase 3 fine calculation tests.\n\nFine is computed dynamically — never stored in the DB.\n\nFormula: daysOverdue = Math.ceil((settledAt - dueDate) / MS_PER_DAY), fine = daysOverdue × FINE_PER_DAY (env var, default 1)\n\nF01-F03: on-time return → fine = 0\nF04-F06: overdue return → fine > 0 (requires DB backdating, see F04 description)\nF07-F08: still-borrowed overdue → active history shows fine\nF09: admin overdue list shows fine",
       "item": [
         {
-          "name": "SETUP \u2014 Create fine test book",
+          "name": "SETUP — Create fine test book",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('SETUP \u2014 Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('SETUP \u2014 fine_book_id saved', () => {",
+                  "pm.test('SETUP — Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('SETUP — fine_book_id saved', () => {",
                   "  const id = pm.response.json().data.book._id;",
                   "  pm.expect(id).to.be.a('string');",
                   "  pm.collectionVariables.set('fine_book_id', id);",
-                  "  console.log('\u2705 fine_book_id:', id);",
+                  "  console.log('✅ fine_book_id:', id);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2250,19 +2255,19 @@
           }
         },
         {
-          "name": "F01 \u2014 201 Borrow fine test book",
+          "name": "F01 — 201 Borrow fine test book",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('F01 \u2014 Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('F01 \u2014 borrowId and dueDate present', () => {",
+                  "pm.test('F01 — Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('F01 — borrowId and dueDate present', () => {",
                   "  const d = pm.response.json().data;",
                   "  pm.expect(d.borrowId).to.be.a('string');",
                   "  pm.expect(d.dueDate).to.be.a('string');",
                   "  pm.collectionVariables.set('fine_borrow_id_a', d.borrowId);",
-                  "  console.log('\u2705 fine_borrow_id_a:', d.borrowId);",
+                  "  console.log('✅ fine_borrow_id_a:', d.borrowId);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2306,14 +2311,14 @@
           }
         },
         {
-          "name": "F02 \u2014 200 Return immediately \u2192 fine=0, daysOverdue=0",
+          "name": "F02 — 200 Return immediately → fine=0, daysOverdue=0",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('F02 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('F02 \u2014 fine = 0 (on-time return)', () => {",
+                  "pm.test('F02 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F02 — fine = 0 (on-time return)', () => {",
                   "  const rec = pm.response.json().data.borrowRecord;",
                   "  pm.expect(rec).to.have.property('daysOverdue');",
                   "  pm.expect(rec).to.have.property('fine');",
@@ -2359,18 +2364,18 @@
                 "{{fine_borrow_id_a}}"
               ]
             },
-            "description": "Returns the book without any delay \u2014 the book was never overdue.\n\n**Assertions**: `daysOverdue = 0`, `fine = 0` in the return response."
+            "description": "Returns the book without any delay — the book was never overdue.\n\n**Assertions**: `daysOverdue = 0`, `fine = 0` in the return response."
           }
         },
         {
-          "name": "F03 \u2014 200 History shows fine=0 on returned record",
+          "name": "F03 — 200 History shows fine=0 on returned record",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('F03 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('F03 \u2014 fine fields present on history items', () => {",
+                  "pm.test('F03 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F03 — fine fields present on history items', () => {",
                   "  const borrows = pm.response.json().data.borrows;",
                   "  pm.expect(borrows).to.be.an('array').that.is.not.empty;",
                   "  borrows.forEach(b => {",
@@ -2380,7 +2385,7 @@
                   "    pm.expect(b.fine).to.be.a('number').and.gte(0);",
                   "  });",
                   "});",
-                  "pm.test('F03 \u2014 on-time borrow has fine=0', () => {",
+                  "pm.test('F03 — on-time borrow has fine=0', () => {",
                   "  const rec = pm.response.json().data.borrows.find(",
                   "    b => b._id === pm.collectionVariables.get('fine_borrow_id_a')",
                   "  );",
@@ -2423,24 +2428,24 @@
                 }
               ]
             },
-            "description": "Checks that the on-time return from F02 appears in history with `fine=0` and `daysOverdue=0`.\n\nFine values are computed dynamically on each read \u2014 never stored."
+            "description": "Checks that the on-time return from F02 appears in history with `fine=0` and `daysOverdue=0`.\n\nFine values are computed dynamically on each read — never stored."
           }
         },
         {
-          "name": "F04 \u2014 201 Borrow again (for overdue scenario)",
+          "name": "F04 — 201 Borrow again (for overdue scenario)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('F04 \u2014 Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('F04 \u2014 fine_borrow_id_b saved', () => {",
+                  "pm.test('F04 — Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('F04 — fine_borrow_id_b saved', () => {",
                   "  const d = pm.response.json().data;",
                   "  pm.expect(d.borrowId).to.be.a('string');",
                   "  pm.collectionVariables.set('fine_borrow_id_b', d.borrowId);",
-                  "  console.log('\u2705 fine_borrow_id_b:', d.borrowId);",
-                  "  console.log('\u26a0\ufe0f  Back-date dueDate in MongoDB before running F05-F07');",
-                  "  console.log('   mongosh command in request description \u25b2');",
+                  "  console.log('✅ fine_borrow_id_b:', d.borrowId);",
+                  "  console.log('⚠️  Back-date dueDate in MongoDB before running F05-F07');",
+                  "  console.log('   mongosh command in request description ▲');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2480,31 +2485,31 @@
                 "{{fine_book_id}}"
               ]
             },
-            "description": "Borrows the book again for the overdue scenario. Saves {{fine_borrow_id_b}}.\n\n**After running this request**, back-date the dueDate in MongoDB to simulate an overdue book:\n\n```\nmongosh mini-library --quiet --eval \\\n  \"db.borrowrecords.updateOne(\n    {_id: ObjectId('PASTE_fine_borrow_id_b_HERE')},\n    {\\$set: {dueDate: new Date(Date.now() - 47*60*60*1000)}}\n  )\"\n```\n\nThen run F05\u2013F07 to assert fine > 0."
+            "description": "Borrows the book again for the overdue scenario. Saves {{fine_borrow_id_b}}.\n\n**After running this request**, back-date the dueDate in MongoDB to simulate an overdue book:\n\n```\nmongosh mini-library --quiet --eval \\\n  \"db.borrowrecords.updateOne(\n    {_id: ObjectId('PASTE_fine_borrow_id_b_HERE')},\n    {\\$set: {dueDate: new Date(Date.now() - 47*60*60*1000)}}\n  )\"\n```\n\nThen run F05–F07 to assert fine > 0."
           }
         },
         {
-          "name": "F05 \u2014 200 Return overdue book \u2192 fine > 0",
+          "name": "F05 — 200 Return overdue book → fine > 0",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('F05 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('F05 \u2014 fine fields present in return response', () => {",
+                  "pm.test('F05 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F05 — fine fields present in return response', () => {",
                   "  const rec = pm.response.json().data.borrowRecord;",
                   "  pm.expect(rec).to.have.property('daysOverdue');",
                   "  pm.expect(rec).to.have.property('fine');",
                   "  pm.expect(rec.daysOverdue).to.be.a('number').and.gte(0);",
                   "  pm.expect(rec.fine).to.be.a('number').and.gte(0);",
                   "});",
-                  "pm.test('F05 \u2014 overdue: fine > 0 (requires DB back-date from F04)', () => {",
+                  "pm.test('F05 — overdue: fine > 0 (requires DB back-date from F04)', () => {",
                   "  const rec = pm.response.json().data.borrowRecord;",
                   "  if (rec.daysOverdue > 0) {",
                   "    pm.expect(rec.fine).to.be.gt(0, 'fine should be > 0 when overdue');",
-                  "    console.log(`\u2705 daysOverdue=${rec.daysOverdue}, fine=${rec.fine}`);",
+                  "    console.log(`✅ daysOverdue=${rec.daysOverdue}, fine=${rec.fine}`);",
                   "  } else {",
-                  "    console.warn('\u26a0\ufe0f  daysOverdue=0 \u2014 did you back-date in MongoDB? See F04 description.');",
+                  "    console.warn('⚠️  daysOverdue=0 — did you back-date in MongoDB? See F04 description.');",
                   "    pm.expect(rec.fine).to.equal(0, 'fine should be 0 when not overdue');",
                   "  }",
                   "});"
@@ -2547,18 +2552,18 @@
                 "{{fine_borrow_id_b}}"
               ]
             },
-            "description": "**Pre-condition**: Run the `mongosh` back-date command from F04 description first (set dueDate 47h in the past).\n\n**Assertions**: `daysOverdue > 0`, `fine > 0` in the return response.\n\nFine is computed dynamically from the persisted `returnedAt` timestamp \u2014 nothing is written to the DB."
+            "description": "**Pre-condition**: Run the `mongosh` back-date command from F04 description first (set dueDate 47h in the past).\n\n**Assertions**: `daysOverdue > 0`, `fine > 0` in the return response.\n\nFine is computed dynamically from the persisted `returnedAt` timestamp — nothing is written to the DB."
           }
         },
         {
-          "name": "F06 \u2014 200 History shows fine on returned records",
+          "name": "F06 — 200 History shows fine on returned records",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('F06 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('F06 \u2014 all returned records have fine fields', () => {",
+                  "pm.test('F06 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F06 — all returned records have fine fields', () => {",
                   "  const borrows = pm.response.json().data.borrows;",
                   "  pm.expect(borrows).to.be.an('array').that.is.not.empty;",
                   "  borrows.forEach(b => {",
@@ -2568,16 +2573,16 @@
                   "    pm.expect(b.fine).to.be.a('number').and.gte(0);",
                   "  });",
                   "});",
-                  "pm.test('F06 \u2014 overdue record has fine > 0 (if DB backdated)', () => {",
+                  "pm.test('F06 — overdue record has fine > 0 (if DB backdated)', () => {",
                   "  const rec = pm.response.json().data.borrows.find(",
                   "    b => b._id === pm.collectionVariables.get('fine_borrow_id_b')",
                   "  );",
                   "  if (!rec) { console.warn('fine_borrow_id_b not found in returned history'); return; }",
                   "  if (rec.daysOverdue > 0) {",
                   "    pm.expect(rec.fine).to.be.gt(0);",
-                  "    console.log(`\u2705 overdue history: daysOverdue=${rec.daysOverdue}, fine=${rec.fine}`);",
+                  "    console.log(`✅ overdue history: daysOverdue=${rec.daysOverdue}, fine=${rec.fine}`);",
                   "  } else {",
-                  "    console.warn('\u26a0\ufe0f  Record is not overdue \u2014 back-date dueDate in MongoDB first (see F04).');",
+                  "    console.warn('⚠️  Record is not overdue — back-date dueDate in MongoDB first (see F04).');",
                   "  }",
                   "});"
                 ],
@@ -2619,18 +2624,18 @@
           }
         },
         {
-          "name": "F07 \u2014 201 Borrow for active-overdue check",
+          "name": "F07 — 201 Borrow for active-overdue check",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('F07 \u2014 Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('F07 \u2014 fine_borrow_id_c saved', () => {",
+                  "pm.test('F07 — Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('F07 — fine_borrow_id_c saved', () => {",
                   "  const d = pm.response.json().data;",
                   "  pm.collectionVariables.set('fine_borrow_id_c', d.borrowId);",
-                  "  console.log('\u2705 fine_borrow_id_c:', d.borrowId);",
-                  "  console.log('\u26a0\ufe0f  Back-date dueDate 71h in the past before running F08');",
+                  "  console.log('✅ fine_borrow_id_c:', d.borrowId);",
+                  "  console.log('⚠️  Back-date dueDate 71h in the past before running F08');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2674,14 +2679,14 @@
           }
         },
         {
-          "name": "F08 \u2014 200 Active borrow history shows fine on overdue record",
+          "name": "F08 — 200 Active borrow history shows fine on overdue record",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('F08 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('F08 \u2014 all active records have fine fields', () => {",
+                  "pm.test('F08 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F08 — all active records have fine fields', () => {",
                   "  const borrows = pm.response.json().data.borrows;",
                   "  pm.expect(borrows).to.be.an('array');",
                   "  borrows.forEach(b => {",
@@ -2691,16 +2696,16 @@
                   "    pm.expect(b.fine).to.be.a('number').and.gte(0);",
                   "  });",
                   "});",
-                  "pm.test('F08 \u2014 overdue active record has fine > 0 (if DB backdated)', () => {",
+                  "pm.test('F08 — overdue active record has fine > 0 (if DB backdated)', () => {",
                   "  const rec = pm.response.json().data.borrows.find(",
                   "    b => b._id === pm.collectionVariables.get('fine_borrow_id_c')",
                   "  );",
                   "  if (!rec) { console.warn('fine_borrow_id_c not found'); return; }",
                   "  if (rec.daysOverdue > 0) {",
                   "    pm.expect(rec.fine).to.be.gt(0);",
-                  "    console.log(`\u2705 active overdue: daysOverdue=${rec.daysOverdue}, fine=${rec.fine}`);",
+                  "    console.log(`✅ active overdue: daysOverdue=${rec.daysOverdue}, fine=${rec.fine}`);",
                   "  } else {",
-                  "    console.warn('\u26a0\ufe0f  Not overdue \u2014 back-date dueDate in MongoDB first (see F07).');",
+                  "    console.warn('⚠️  Not overdue — back-date dueDate in MongoDB first (see F07).');",
                   "  }",
                   "});"
                 ],
@@ -2742,18 +2747,18 @@
           }
         },
         {
-          "name": "F09 \u2014 200 Admin overdue=true \u2192 fine > 0 on records",
+          "name": "F09 — 200 Admin overdue=true → fine > 0 on records",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('F09 \u2014 Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('F09 \u2014 overdue borrows have fine fields', () => {",
+                  "pm.test('F09 — Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('F09 — overdue borrows have fine fields', () => {",
                   "  const borrows = pm.response.json().data.borrows;",
                   "  pm.expect(borrows).to.be.an('array');",
                   "  if (borrows.length === 0) {",
-                  "    console.warn('\u26a0\ufe0f  No overdue borrows found \u2014 back-date a record first (see F07).');",
+                  "    console.warn('⚠️  No overdue borrows found — back-date a record first (see F07).');",
                   "    return;",
                   "  }",
                   "  borrows.forEach(b => {",
@@ -2762,7 +2767,7 @@
                   "    pm.expect(b.daysOverdue).to.be.gt(0, `borrow ${b._id} should be overdue`);",
                   "    pm.expect(b.fine).to.be.gt(0, `borrow ${b._id} should have fine > 0`);",
                   "  });",
-                  "  console.log(`\u2705 ${borrows.length} overdue borrow(s) all have fine > 0`);",
+                  "  console.log(`✅ ${borrows.length} overdue borrow(s) all have fine > 0`);",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -2803,13 +2808,13 @@
           }
         },
         {
-          "name": "TEARDOWN \u2014 Return active fine borrow (C)",
+          "name": "TEARDOWN — Return active fine borrow (C)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('TEARDOWN \u2014 return status 200 or 400 (already returned)', () => {",
+                  "pm.test('TEARDOWN — return status 200 or 400 (already returned)', () => {",
                   "  pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
                   "});"
                 ],
@@ -2854,13 +2859,13 @@
           }
         },
         {
-          "name": "TEARDOWN \u2014 Delete fine test book",
+          "name": "TEARDOWN — Delete fine test book",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('TEARDOWN \u2014 delete status 200', () => pm.response.to.have.status(200));"
+                  "pm.test('TEARDOWN — delete status 200', () => pm.response.to.have.status(200));"
                 ],
                 "type": "text/javascript"
               }
@@ -2888,6 +2893,417 @@
                 "api",
                 "books",
                 "{{fine_book_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧑‍💼 Admin Users",
+      "item": [
+        {
+          "name": "AU01 - GET /admin/users (member 403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('AU01 - member cannot list users (403)', function () {",
+                  "  pm.response.to.have.status(403);",
+                  "  pm.expect(pm.response.json().success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
+            }
+          }
+        },
+        {
+          "name": "AU02 - GET /admin/users (admin 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('AU02 - admin can list users (200)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.success).to.be.true;",
+                  "  pm.expect(body.data).to.have.property('items');",
+                  "  pm.expect(body.data.items).to.be.an('array');",
+                  "  const t = body.data.items.find(u => u.role !== 'admin');",
+                  "  if (t) pm.collectionVariables.set('test_user_id', t._id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users"
+              ]
+            }
+          }
+        },
+        {
+          "name": "AU03 - PATCH /admin/users/:id/role (admin 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('AU03 - admin can update role (200)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.success).to.be.true;",
+                  "  pm.expect(body.data.user.role).to.equal('librarian');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"role\": \"librarian\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/{{test_user_id}}/role",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{test_user_id}}",
+                "role"
+              ]
+            }
+          }
+        },
+        {
+          "name": "AU04 - PATCH /admin/users/:id/status (admin 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('AU04 - admin can deactivate user (200)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.success).to.be.true;",
+                  "  pm.expect(body.data.user.isActive).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"isActive\": false}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/{{test_user_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "users",
+                "{{test_user_id}}",
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🤖 Chat",
+      "item": [
+        {
+          "name": "C01 - POST /chat (no token 401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('C01 - unauthenticated (401)', function () {",
+                  "  pm.response.to.have.status(401);",
+                  "  pm.expect(pm.response.json().success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"message\": \"What books do you have?\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chat"
+              ]
+            }
+          }
+        },
+        {
+          "name": "C02 - POST /chat (empty message 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('C02 - empty message (400)', function () {",
+                  "  pm.response.to.have.status(400);",
+                  "  pm.expect(pm.response.json().success).to.be.false;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"message\": \"\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chat"
+              ]
+            }
+          }
+        },
+        {
+          "name": "C03 - POST /chat (member 200 with reply and sources)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('C03 - member chat reply (200)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.success).to.be.true;",
+                  "  pm.expect(body.data.reply).to.be.a('string').and.to.have.length.greaterThan(0);",
+                  "  pm.expect(body.data.sources).to.be.an('array');",
+                  "  if (body.data.sources.length > 0) {",
+                  "    const s = body.data.sources[0];",
+                  "    pm.expect(s).to.include.all.keys('id', 'title', 'author', 'genre');",
+                  "  }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{member_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"message\": \"Can you recommend a mystery novel?\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chat"
+              ]
+            }
+          }
+        },
+        {
+          "name": "C04 - POST /chat (admin 200, any role works)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('C04 - admin chat works (200)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.success).to.be.true;",
+                  "  pm.expect(body.data.reply).to.be.a('string').and.to.have.length.greaterThan(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"message\": \"What historical fiction books are available?\"}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/chat",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "chat"
               ]
             }
           }
