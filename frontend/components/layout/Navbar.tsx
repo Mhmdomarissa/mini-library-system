@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LogOut, LayoutDashboard, Library, History, ClipboardList, Users, Menu } from 'lucide-react';
+import { BookOpen, LogOut, LayoutDashboard, Library, History, ClipboardList, Users, Menu, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -36,6 +36,7 @@ interface NavLink {
 const NAV_LINKS: NavLink[] = [
   { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="mr-1.5 h-4 w-4" /> },
   { href: '/dashboard/history', label: 'History', icon: <History className="mr-1.5 h-4 w-4" /> },
+  { href: '/chat', label: 'AI Chat', icon: <MessageSquare className="mr-1.5 h-4 w-4" /> },
   { href: '/admin/books', label: 'Manage Books', icon: <Library className="mr-1.5 h-4 w-4" />, adminOnly: true },
   { href: '/admin/borrows', label: 'All Borrows', icon: <ClipboardList className="mr-1.5 h-4 w-4" />, adminOnly: true },
   { href: '/admin/users', label: 'Users', icon: <Users className="mr-1.5 h-4 w-4" />, adminExclusive: true },

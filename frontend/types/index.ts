@@ -92,3 +92,26 @@ export interface CreateBookPayload {
 }
 
 export type UpdateBookPayload = Partial<CreateBookPayload>;
+
+// ── Chat ───────────────────────────────────────────────────────────────────────
+
+export interface ChatSource {
+  id: string;
+  title: string;
+  author: string;
+  genre: string;
+}
+
+/** A single turn in the chat conversation (tracked client-side only) */
+export interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  sources?: ChatSource[];
+  timestamp: Date;
+}
+
+/** Shape of data returned by POST /api/chat */
+export interface ChatApiResponse {
+  reply: string;
+  sources: ChatSource[];
+}
