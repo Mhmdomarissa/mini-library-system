@@ -38,6 +38,7 @@ export const validate = (schema: ZodSchema, target: ValidateTarget = 'body') => 
       .catch((error: unknown) => {
         if (error instanceof ZodError) {
           res.status(400).json({
+            success: false,
             message: 'Validation error',
             errors: error.issues.map((e: ZodIssue) => ({
               field: e.path.join('.') || target,
