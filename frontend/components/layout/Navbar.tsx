@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { BookOpen, LogOut, LayoutDashboard, Library, History, ClipboardList, Users, Menu, MessageSquare } from 'lucide-react';
@@ -42,11 +42,27 @@ const NAV_LINKS: NavLink[] = [
   { href: '/admin/users', label: 'Users', icon: <Users className="mr-1.5 h-4 w-4" />, adminExclusive: true },
 ];
 
+function getInitials(name: string) {
+  return name
+    .split(' ')
+    .map((p) => p[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
 export function Navbar() {
   const { authUser, role, logOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 4);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const isAdmin = role === 'admin' || role === 'librarian';
 
@@ -62,29 +78,33 @@ export function Navbar() {
   });
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
+    <header className={cn('sticky top-0 z-40 border-b bg-background/80 backdrop-blur transition-shadow', scrolled && 'shadow-sm')}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         {/* Brand */}
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-          <BookOpen className="h-5 w-5" />
+        <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-foreground hover:text-primary transition-colors">
+          <BookOpen className="h-5 w-5 text-primary" />
           <span>Mini Library</span>
         </Link>
 
         {/* Desktop nav links */}
         <nav className="hidden items-center gap-1 md:flex">
-          {visibleLinks.map((link) => (
-            <Button
-              key={link.href}
-              variant={pathname === link.href ? 'secondary' : 'ghost'}
-              size="sm"
-              asChild
-            >
-              <Link href={link.href}>
-                {link.icon}
-                {link.label}
-              </Link>
-            </Button>
-          ))}
+          {visibleLinks.map((link) => {
+            const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
+            return (
+              <Button
+                key={link.href}
+                variant={isActive ? 'secondary' : 'ghost'}
+                size="sm"
+                className={cn(isActive && 'text-primary font-medium')}
+                asChild
+              >
+                <Link href={link.href}>
+                  {link.icon}
+                  {link.label}
+                </Link>
+              </Button>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-2">
@@ -102,8 +122,12 @@ export function Navbar() {
           {authUser && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="hidden md:inline-flex">
-                  {authUser.profile.name || authUser.firebaseUser.email}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden h-8 w-8 items-center justify-center rounded-full bg-primary/10 p-0 text-xs font-bold text-primary hover:bg-primary/20 md:inline-flex"
+                >
+                  {getInitials(authUser.profile.name || authUser.profile.email)}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -147,20 +171,23 @@ export function Navbar() {
             </SheetTitle>
           </SheetHeader>
           <nav className="flex flex-col gap-1 px-4">
-            {visibleLinks.map((link) => (
-              <Button
-                key={link.href}
-                variant={pathname === link.href ? 'secondary' : 'ghost'}
-                className="justify-start"
-                asChild
-                onClick={() => setMobileOpen(false)}
-              >
-                <Link href={link.href}>
-                  {link.icon}
-                  {link.label}
-                </Link>
-              </Button>
-            ))}
+          {visibleLinks.map((link) => {
+              const isActiveMobile = pathname === link.href || pathname.startsWith(link.href + '/');
+              return (
+                <Button
+                  key={link.href}
+                  variant={isActiveMobile ? 'secondary' : 'ghost'}
+                  className={cn('justify-start', isActiveMobile && 'text-primary font-medium')}
+                  asChild
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <Link href={link.href}>
+                    {link.icon}
+                    {link.label}
+                  </Link>
+                </Button>
+              );
+            })}
           </nav>
           {authUser && (
             <div className="mt-auto border-t px-4 pt-4">

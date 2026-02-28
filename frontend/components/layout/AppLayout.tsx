@@ -1,4 +1,5 @@
 import { Navbar } from './Navbar';
+import { AnimatedPage } from './AnimatedPage';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -8,7 +9,9 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-8">
+        <AnimatedPage>{children}</AnimatedPage>
+      </main>
     </div>
   );
 }

@@ -15,8 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Mini Library',
-  description: 'Borrow and manage books with ease.',
+  title: 'Mini Library — AI-Powered Book Management',
+  description:
+    'Borrow, search, and manage books with semantic search, a RAG librarian chatbot, and role-based access. Built with Next.js, MongoDB, Firebase & OpenAI.',
+  keywords: ['library', 'books', 'borrow', 'AI search', 'semantic search', 'librarian chatbot'],
 };
 
 export default function RootLayout({

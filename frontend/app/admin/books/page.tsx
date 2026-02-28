@@ -338,7 +338,7 @@ export default function AdminBooksPage() {
               </TableHeader>
               <TableBody>
                 {data.items.map((book) => (
-                  <TableRow key={book._id}>
+                  <TableRow key={book._id} className="hover:bg-muted/40">
                     <TableCell>
                       <div>
                         <p className="font-medium">{book.title}</p>

@@ -55,13 +55,17 @@ export default function LoginPage() {
   if (loading) return null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <div className="mb-2 flex justify-center">
-            <BookOpen className="h-8 w-8" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      {/* subtle radial gradient backdrop */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,oklch(0.511_0.262_265.3/0.08),transparent)]" />
+      <Card className="relative w-full max-w-md shadow-xl">
+        <CardHeader className="pb-6 text-center">
+          <div className="mb-3 flex justify-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+              <BookOpen className="h-6 w-6 text-primary" />
+            </div>
           </div>
-          <CardTitle className="text-2xl">Mini Library</CardTitle>
+          <CardTitle className="text-2xl font-extrabold">Mini Library</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>

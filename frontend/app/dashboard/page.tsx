@@ -162,11 +162,11 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {displayBooks.map((book) => (
-              <Card key={book._id} className="flex flex-col">
+              <Card key={book._id} className="group flex flex-col transition-all hover:-translate-y-0.5 hover:shadow-md">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <CardTitle className="line-clamp-1 text-base">{book.title}</CardTitle>
+                      <CardTitle className="line-clamp-1 text-base group-hover:text-primary transition-colors">{book.title}</CardTitle>
                       <p className="text-sm text-muted-foreground">{book.author}</p>
                     </div>
                     {book.publishedYear && (

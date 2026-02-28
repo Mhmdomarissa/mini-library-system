@@ -131,7 +131,7 @@ export default function HistoryPage() {
                   const isActive = displayStatus === 'borrowed' || displayStatus === 'overdue';
                   const isOverdue = displayStatus === 'overdue';
                   return (
-                    <TableRow key={record._id} className={isOverdue ? 'bg-destructive/5' : ''}>
+                    <TableRow key={record._id} className={isOverdue ? 'bg-destructive/5 hover:bg-destructive/10' : 'hover:bg-muted/40'}>
                       <TableCell className="font-medium">
                         {getBookTitle(record.bookId)}
                       </TableCell>
