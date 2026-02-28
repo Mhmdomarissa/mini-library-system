@@ -21,15 +21,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/features/auth';
 
-const schema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
+const schema = z
+  .object({
+    name: z.string().min(2, 'Name must be at least 2 characters'),
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 type FormValues = z.infer<typeof schema>;
 
-export default function LoginPage() {
-  const { signIn, authUser, loading } = useAuth();
+export default function SignUpPage() {
+  const { signUp, authUser, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -40,15 +47,19 @@ export default function LoginPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
-      await signIn(values.email, values.password);
-      // onAuthStateChanged → redirect handled by useEffect above
-    } catch {
-      toast.error('Invalid email or password. Please try again.');
+      await signUp(values.email, values.password, values.name);
+      toast.success('Account created! Welcome to Mini Library.');
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message.includes('email-already-in-use')) {
+        toast.error('This email is already registered. Please sign in instead.');
+      } else {
+        toast.error('Could not create account. Please try again.');
+      }
     }
   };
 
@@ -61,12 +72,25 @@ export default function LoginPage() {
           <div className="mb-2 flex justify-center">
             <BookOpen className="h-8 w-8" />
           </div>
-          <CardTitle className="text-2xl">Mini Library</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+          <CardTitle className="text-2xl">Create Account</CardTitle>
+          <CardDescription>Sign up to start borrowing books</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Jane Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <FormField
                 control={form.control}
                 name="email"
@@ -93,16 +117,29 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Signing in…' : 'Sign in'}
+                {form.formState.isSubmitting ? 'Creating account…' : 'Sign up'}
               </Button>
             </form>
           </Form>
 
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="font-medium text-primary hover:underline">
-              Sign up
+            Already have an account?{' '}
+            <Link href="/login" className="font-medium text-primary hover:underline">
+              Sign in
             </Link>
           </p>
         </CardContent>

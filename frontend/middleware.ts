@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const PROTECTED_PREFIXES = ['/dashboard', '/admin'];
 
 // Routes that are only for unauthenticated users
-const AUTH_ONLY_ROUTES = ['/login'];
+const AUTH_ONLY_ROUTES = ['/login', '/signup'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -41,5 +41,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/admin/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/login', '/signup'],
 };

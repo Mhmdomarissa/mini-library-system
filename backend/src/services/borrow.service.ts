@@ -145,7 +145,11 @@ export class BorrowService {
    *  4. Increment book's availableCopies (flips status → available if was out_of_stock)
    *  5. Commit
    */
-  async return(borrowId: string, userId: Types.ObjectId): Promise<BorrowRecordWithFine> {
+  async return(
+    borrowId: string,
+    userId: Types.ObjectId,
+    callerRole?: string,
+  ): Promise<BorrowRecordWithFine> {
     const session = await mongoose.startSession();
 
     try {
@@ -158,8 +162,10 @@ export class BorrowService {
         throw AppError.notFound('Borrow record not found');
       }
 
-      // 2. Ownership check — a member can only return their own borrow
-      if (record.userId.toString() !== userId.toString()) {
+      // 2. Ownership check — members can only return their own borrow;
+      //    admins and librarians may return on behalf of any user.
+      const isElevated = callerRole === 'admin' || callerRole === 'librarian';
+      if (!isElevated && record.userId.toString() !== userId.toString()) {
         throw AppError.forbidden('You can only return your own borrowed books');
       }
 

@@ -10,6 +10,8 @@ import {
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
   signOut,
   User as FirebaseUser,
 } from 'firebase/auth';
@@ -30,6 +32,7 @@ interface AuthContextValue {
   role: UserRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<void>;
   logOut: () => Promise<void>;
 }
 
@@ -93,6 +96,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // onAuthStateChanged listener above handles the rest
   };
 
+  const signUp = async (email: string, password: string, name: string) => {
+    const cred = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password);
+    await updateProfile(cred.user, { displayName: name });
+    // onAuthStateChanged listener handles the rest (backend auto-creates user via upsert)
+  };
+
   const logOut = async () => {
     await signOut(getFirebaseAuth());
   };
@@ -104,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: authUser?.profile.role ?? null,
         loading,
         signIn,
+        signUp,
         logOut,
       }}
     >

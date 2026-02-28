@@ -61,9 +61,12 @@ export class BookRepository {
   ): Promise<PaginatedResult<IBook>> {
     const query: QueryFilter<IBook> = { isDeleted: false };
 
-    // Full-text search on title / author / description (weighted text index)
+    // Regex-based partial / prefix search on title, author, description.
+    // Escapes special regex characters so user input is safe.
     if (filters.search?.trim()) {
-      query.$text = { $search: filters.search.trim() };
+      const escaped = filters.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'i');
+      query.$or = [{ title: regex }, { author: regex }, { genre: regex }, { description: regex }];
     }
 
     if (filters.genre) {
@@ -75,10 +78,7 @@ export class BookRepository {
     }
 
     const [items, totalItems] = await Promise.all([
-      Book.find(query)
-        .skip(pagination.skip)
-        .limit(pagination.limit)
-        .sort(filters.search ? { score: { $meta: 'textScore' } } : { createdAt: -1 }),
+      Book.find(query).skip(pagination.skip).limit(pagination.limit).sort({ createdAt: -1 }),
       Book.countDocuments(query),
     ]);
 

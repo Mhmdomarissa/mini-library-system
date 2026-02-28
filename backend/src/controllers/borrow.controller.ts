@@ -35,7 +35,7 @@ export const returnBook = async (req: Request, res: Response): Promise<void> => 
   const { borrowId } = req.params as { borrowId: string };
   const userId = req.user!._id as Types.ObjectId;
 
-  const record = await borrowService.return(borrowId, userId);
+  const record = await borrowService.return(borrowId, userId, req.user!.role);
 
   sendSuccess(res, { borrowRecord: record });
 };

@@ -102,7 +102,7 @@ export class BorrowRepository {
     const [items, totalItems] = await Promise.all([
       BorrowRecord.find(query)
         .populate('bookId', 'title author isbn genre')
-        .populate('userId', 'email displayName')
+        .populate('userId', 'email name')
         .sort({ createdAt: -1 })
         .skip(pagination.skip)
         .limit(pagination.limit),
