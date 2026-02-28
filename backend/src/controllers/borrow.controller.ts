@@ -58,10 +58,7 @@ export const myHistory = async (req: Request, res: Response): Promise<void> => {
   const pagination = parsePagination(req);
   const result = await borrowService.myHistory(userId, { status }, pagination);
 
-  sendSuccess(res, {
-    borrows: result.items,
-    pagination: result.pagination,
-  });
+  sendSuccess(res, result);
 };
 
 /**
@@ -83,8 +80,5 @@ export const adminList = async (req: Request, res: Response): Promise<void> => {
   const pagination = parsePagination(req);
   const result = await borrowService.adminList({ status, overdue, userId, bookId }, pagination);
 
-  sendSuccess(res, {
-    borrows: result.items,
-    pagination: result.pagination,
-  });
+  sendSuccess(res, result);
 };

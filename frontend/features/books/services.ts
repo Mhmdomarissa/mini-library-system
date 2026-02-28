@@ -26,8 +26,9 @@ export const bookService = {
 
   getById: (id: string): Promise<Book> => api.get(`/api/books/${id}`),
 
+  // POST /api/books/semantic-search — body: { query, limit }
   semanticSearch: (q: string, limit = 10): Promise<Book[]> =>
-    api.get(`/api/books/search/semantic${buildQS({ q, limit })}`),
+    api.post('/api/books/semantic-search', { query: q, limit }),
 
   create: (payload: CreateBookPayload): Promise<Book> =>
     api.post('/api/books', payload),

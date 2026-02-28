@@ -38,7 +38,7 @@ export const list = async (req: Request, res: Response): Promise<void> => {
   const pagination = { page, limit, skip: (page - 1) * limit };
 
   const result = await bookService.list(filters, pagination);
-  sendSuccess(res, { books: result.items, pagination: result.pagination });
+  sendSuccess(res, result);
 };
 
 export const getById = async (req: Request, res: Response): Promise<void> => {
@@ -72,5 +72,5 @@ export const remove = async (req: Request, res: Response): Promise<void> => {
 export const semanticSearch = async (req: Request, res: Response): Promise<void> => {
   const { query, limit } = req.body as SemanticSearchInput;
   const books = await bookService.semanticSearch(query, limit);
-  sendSuccess(res, { books });
+  sendSuccess(res, books);
 };
