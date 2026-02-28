@@ -1,6 +1,6 @@
 // ── Roles ──────────────────────────────────────────────────────────────────────
 
-export type UserRole = 'user' | 'admin';
+export type UserRole = 'admin' | 'librarian' | 'member';
 
 // ── Domain models ──────────────────────────────────────────────────────────────
 
@@ -8,9 +8,11 @@ export interface User {
   _id: string;
   firebaseUid: string;
   email: string;
-  displayName: string;
+  name: string;
   role: UserRole;
+  isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Book {
@@ -19,17 +21,18 @@ export interface Book {
   author: string;
   isbn: string;
   genre: string;
+  description: string;
   publishedYear: number;
   totalCopies: number;
   availableCopies: number;
-  description?: string;
+  status: 'available' | 'out_of_stock' | 'archived';
   isDeleted?: boolean;
   deletedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export type BorrowStatus = 'active' | 'returned' | 'overdue';
+export type BorrowStatus = 'borrowed' | 'returned' | 'overdue';
 
 export interface BorrowRecord {
   _id: string;
@@ -39,6 +42,11 @@ export interface BorrowRecord {
   dueDate: string;
   returnedAt?: string;
   status: BorrowStatus;
+  /** Dynamically computed — not persisted in DB */
+  computedStatus?: string;
+  /** Days overdue — computed at query time */
+  daysOverdue?: number;
+  /** Fine amount — computed at query time */
   fine?: number;
   createdAt: string;
   updatedAt: string;
@@ -53,10 +61,12 @@ export interface ApiResponse<T> {
 }
 
 export interface Pagination {
-  total: number;
   page: number;
   limit: number;
+  totalItems: number;
   totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
 export interface PaginatedResponse<T> {

@@ -36,41 +36,40 @@ import {
 } from '@/components/ui/table';
 import { AppLayout } from '@/components/layout';
 import { PageHeader, LoadingSpinner, ErrorMessage, EmptyState } from '@/components/shared';
-import { useBooks, useCreateBook, useDeleteBook } from '@/features/books';
+import { useBooks, useCreateBook, useUpdateBook, useDeleteBook } from '@/features/books';
 import { useAuth } from '@/features/auth';
-import type { CreateBookPayload } from '@/types';
+import type { Book, CreateBookPayload, UpdateBookPayload } from '@/types';
 
-const schema = z.object({
-  title: z.string().min(1),
-  author: z.string().min(1),
-  isbn: z.string().min(1),
-  genre: z.string().min(1),
+const bookSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  author: z.string().min(1, 'Author is required'),
+  isbn: z.string().min(1, 'ISBN is required'),
+  genre: z.string().min(1, 'Genre is required'),
   publishedYear: z.coerce.number().min(1000).max(new Date().getFullYear()),
   totalCopies: z.coerce.number().min(1),
   description: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof schema>;
+type BookFormValues = z.infer<typeof bookSchema>;
 
-export default function AdminBooksPage() {
-  const [page, setPage] = useState(1);
-  const [open, setOpen] = useState(false);
+// ── Book Form Dialog ─────────────────────────────────────────────────────────
 
-  // ── In-page role guard ───────────────────────────────────────────────────
-  const { authUser, role, loading: authLoading } = useAuth();
-  const router = useRouter();
-  useEffect(() => {
-    if (authLoading) return;
-    if (!authUser) router.replace('/login');
-    else if (role !== 'admin') router.replace('/dashboard');
-  }, [authUser, role, authLoading, router]);
-
-  const { data, isLoading, isError } = useBooks({ page, limit: 20 });
+function BookFormDialog({
+  open,
+  onOpenChange,
+  editingBook,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  editingBook: Book | null;
+}) {
   const createBook = useCreateBook();
-  const deleteBook = useDeleteBook();
+  const updateBook = useUpdateBook(editingBook?._id ?? '');
+  const isEditing = Boolean(editingBook);
 
-  const form = useForm<FormValues, unknown, FormValues>({
-    resolver: zodResolver(schema) as unknown as import('react-hook-form').Resolver<FormValues>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zod v4 + @hookform/resolvers type mismatch
+  const form = useForm<BookFormValues>({
+    resolver: zodResolver(bookSchema) as unknown as undefined,
     defaultValues: {
       title: '',
       author: '',
@@ -78,19 +77,156 @@ export default function AdminBooksPage() {
       genre: '',
       publishedYear: new Date().getFullYear(),
       totalCopies: 1,
+      description: '',
     },
   });
 
-  const onSubmit: SubmitHandler<FormValues> = async (values) => {
+  // Reset form when dialog opens/closes or editingBook changes
+  useEffect(() => {
+    if (open && editingBook) {
+      form.reset({
+        title: editingBook.title,
+        author: editingBook.author,
+        isbn: editingBook.isbn,
+        genre: editingBook.genre,
+        publishedYear: editingBook.publishedYear,
+        totalCopies: editingBook.totalCopies,
+        description: editingBook.description ?? '',
+      });
+    } else if (open && !editingBook) {
+      form.reset({
+        title: '',
+        author: '',
+        isbn: '',
+        genre: '',
+        publishedYear: new Date().getFullYear(),
+        totalCopies: 1,
+        description: '',
+      });
+    }
+  }, [open, editingBook, form]);
+
+  const onSubmit: SubmitHandler<BookFormValues> = async (values) => {
     try {
-      await createBook.mutateAsync(values as CreateBookPayload);
-      toast.success('Book created successfully!');
+      if (isEditing) {
+        await updateBook.mutateAsync(values as UpdateBookPayload);
+        toast.success('Book updated successfully!');
+      } else {
+        await createBook.mutateAsync(values as CreateBookPayload);
+        toast.success('Book created successfully!');
+      }
       form.reset();
-      setOpen(false);
+      onOpenChange(false);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to create book.';
+      const message = err instanceof Error ? err.message : `Failed to ${isEditing ? 'update' : 'create'} book.`;
       toast.error(message);
     }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{isEditing ? 'Edit Book' : 'Add New Book'}</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            {(['title', 'author', 'isbn', 'genre'] as const).map((field) => (
+              <FormField
+                key={field}
+                control={form.control}
+                name={field}
+                render={({ field: f }) => (
+                  <FormItem>
+                    <FormLabel className="capitalize">{field}</FormLabel>
+                    <FormControl>
+                      <Input {...f} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field: f }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Brief description (used for AI search)" {...f} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField
+                control={form.control}
+                name="publishedYear"
+                render={({ field: f }) => (
+                  <FormItem>
+                    <FormLabel>Year</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...f} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="totalCopies"
+                render={({ field: f }) => (
+                  <FormItem>
+                    <FormLabel>Copies</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...f} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting
+                ? (isEditing ? 'Updating…' : 'Creating…')
+                : (isEditing ? 'Update Book' : 'Create Book')}
+            </Button>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ── Admin Books Page ─────────────────────────────────────────────────────────
+
+export default function AdminBooksPage() {
+  const [page, setPage] = useState(1);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
+
+  // ── In-page role guard (admin + librarian) ───────────────────────────────
+  const { authUser, role, loading: authLoading } = useAuth();
+  const router = useRouter();
+  useEffect(() => {
+    if (authLoading) return;
+    if (!authUser) router.replace('/login');
+    else if (role !== 'admin' && role !== 'librarian') router.replace('/dashboard');
+  }, [authUser, role, authLoading, router]);
+
+  const { data, isLoading, isError } = useBooks({ page, limit: 20 });
+  const deleteBook = useDeleteBook();
+
+  const handleEdit = (book: Book) => {
+    setEditingBook(book);
+    setDialogOpen(true);
+  };
+
+  const handleCreate = () => {
+    setEditingBook(null);
+    setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -98,8 +234,9 @@ export default function AdminBooksPage() {
     try {
       await deleteBook.mutateAsync(id);
       toast.success('Book deleted.');
-    } catch {
-      toast.error('Failed to delete book.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to delete book.';
+      toast.error(message);
     }
   };
 
@@ -109,71 +246,17 @@ export default function AdminBooksPage() {
         title="Manage Books"
         description="Add, edit, and remove books from the library."
         action={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-1 h-4 w-4" />
-                Add Book
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Book</DialogTitle>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-                  {(['title', 'author', 'isbn', 'genre'] as const).map((field) => (
-                    <FormField
-                      key={field}
-                      control={form.control}
-                      name={field}
-                      render={({ field: f }) => (
-                        <FormItem>
-                          <FormLabel className="capitalize">{field}</FormLabel>
-                          <FormControl>
-                            <Input {...f} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
-                  <div className="grid grid-cols-2 gap-3">
-                    <FormField
-                      control={form.control}
-                      name="publishedYear"
-                      render={({ field: f }) => (
-                        <FormItem>
-                          <FormLabel>Year</FormLabel>
-                          <FormControl>
-                            <Input type="number" {...f} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="totalCopies"
-                      render={({ field: f }) => (
-                        <FormItem>
-                          <FormLabel>Copies</FormLabel>
-                          <FormControl>
-                            <Input type="number" {...f} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Creating…' : 'Create Book'}
-                  </Button>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={handleCreate}>
+            <Plus className="mr-1 h-4 w-4" />
+            Add Book
+          </Button>
         }
+      />
+
+      <BookFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        editingBook={editingBook}
       />
 
       {isLoading && (
@@ -200,6 +283,7 @@ export default function AdminBooksPage() {
                   <TableHead>ISBN</TableHead>
                   <TableHead>Copies</TableHead>
                   <TableHead>Available</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -214,20 +298,33 @@ export default function AdminBooksPage() {
                     <TableCell className="font-mono text-xs">{book.isbn}</TableCell>
                     <TableCell>{book.totalCopies}</TableCell>
                     <TableCell>{book.availableCopies}</TableCell>
+                    <TableCell>
+                      <Badge variant={book.status === 'available' ? 'default' : 'destructive'}>
+                        {book.status.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" disabled title="Edit (coming soon)">
-                          <Pencil className="h-4 w-4" />
-                        </Button>
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(book._id)}
-                          disabled={deleteBook.isPending}
+                          onClick={() => handleEdit(book)}
+                          title="Edit book"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </Button>
+                        {role === 'admin' && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(book._id)}
+                            disabled={deleteBook.isPending}
+                            title="Delete book"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -238,16 +335,16 @@ export default function AdminBooksPage() {
 
           <div className="mt-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Page {data.pagination.page} of {data.pagination.totalPages} · {data.pagination.total} books total
+              Page {data.pagination.page} of {data.pagination.totalPages} · {data.pagination.totalItems} books total
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
+              <Button variant="outline" size="sm" disabled={!data.pagination.hasPrevPage} onClick={() => setPage((p) => p - 1)}>
                 Previous
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page >= data.pagination.totalPages}
+                disabled={!data.pagination.hasNextPage}
                 onClick={() => setPage((p) => p + 1)}
               >
                 Next

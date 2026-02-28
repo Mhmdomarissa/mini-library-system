@@ -1,17 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
-import { adminService } from '../services';
-import { borrowKeys } from '@/features/borrow';
+import { adminService, type AdminBorrowQuery } from '../services';
 
-export function useAdminBorrows(page = 1) {
-  return useQuery({
-    queryKey: borrowKeys.adminAll(page),
-    queryFn: () => adminService.getAllBorrows(page),
-  });
-}
+export const adminBorrowKeys = {
+  all: ['admin-borrows'] as const,
+  list: (query: AdminBorrowQuery) => [...adminBorrowKeys.all, 'list', query] as const,
+};
 
-export function useOverdueBorrows() {
+export function useAdminBorrows(query: AdminBorrowQuery = {}) {
   return useQuery({
-    queryKey: ['borrow', 'overdue'],
-    queryFn: () => adminService.getOverdue(),
+    queryKey: adminBorrowKeys.list(query),
+    queryFn: () => adminService.getAllBorrows(query),
   });
 }

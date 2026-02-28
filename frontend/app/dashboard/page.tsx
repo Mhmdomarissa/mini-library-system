@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const [page, setPage] = useState(1);
 
   // ── In-page auth guard ───────────────────────────────────────────────────
-  const { authUser, loading: authLoading } = useAuth();
+  const { authUser, role, loading: authLoading } = useAuth();
   const router = useRouter();
   useEffect(() => {
     if (!authLoading && !authUser) router.replace('/login');
@@ -114,8 +114,9 @@ export default function DashboardPage() {
                   </div>
                   <Button
                     size="sm"
-                    disabled={book.availableCopies === 0 || borrowBook.isPending}
+                    disabled={book.availableCopies === 0 || borrowBook.isPending || role !== 'member'}
                     onClick={() => handleBorrow(book._id)}
+                    title={role !== 'member' ? 'Only members can borrow books' : undefined}
                   >
                     Borrow
                   </Button>
@@ -129,12 +130,14 @@ export default function DashboardPage() {
             <div className="mt-6 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Page {data.pagination.page} of {data.pagination.totalPages}
+              {' · '}
+              {data.pagination.totalItems} book{data.pagination.totalItems !== 1 ? 's' : ''}
             </p>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page === 1}
+                disabled={!data.pagination.hasPrevPage}
                 onClick={() => setPage((p) => p - 1)}
               >
                 Previous
@@ -142,7 +145,7 @@ export default function DashboardPage() {
               <Button
                 variant="outline"
                 size="sm"
-                disabled={page >= data.pagination.totalPages}
+                disabled={!data.pagination.hasNextPage}
                 onClick={() => setPage((p) => p + 1)}
               >
                 Next

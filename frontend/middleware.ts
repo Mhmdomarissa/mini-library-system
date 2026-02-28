@@ -29,10 +29,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Admin-only area
+  // Admin-only area (admin + librarian roles)
   if (pathname.startsWith('/admin')) {
     const role = request.cookies.get('__role')?.value;
-    if (role !== 'admin') {
+    if (role !== 'admin' && role !== 'librarian') {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
   }

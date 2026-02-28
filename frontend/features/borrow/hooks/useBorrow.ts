@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { borrowService } from '../services';
+import type { BorrowHistoryQuery } from '../services';
 
 export const borrowKeys = {
   all: ['borrow'] as const,
-  myHistory: (page: number) => [...borrowKeys.all, 'history', page] as const,
-  adminAll: (page: number) => [...borrowKeys.all, 'admin', page] as const,
+  myHistory: (query: BorrowHistoryQuery) => [...borrowKeys.all, 'history', query] as const,
 };
 
 export function useBorrowBook() {

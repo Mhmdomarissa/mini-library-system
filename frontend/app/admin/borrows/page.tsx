@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,9 +15,9 @@ import {
 } from '@/components/ui/table';
 import { AppLayout } from '@/components/layout';
 import { PageHeader, LoadingSpinner, ErrorMessage, EmptyState } from '@/components/shared';
-import { useBorrowHistory, useReturnBook } from '@/features/borrow';
+import { useAdminBorrows } from '@/features/admin';
 import { useAuth } from '@/features/auth';
-import type { Book, BorrowStatus } from '@/types';
+import type { Book, BorrowStatus, User } from '@/types';
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
   borrowed: 'default',
@@ -33,56 +32,71 @@ const STATUS_FILTERS: { label: string; value: BorrowStatus | undefined }[] = [
   { label: 'Overdue', value: 'overdue' },
 ];
 
-export default function HistoryPage() {
+export default function AdminBorrowsPage() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<BorrowStatus | undefined>(undefined);
+  const [overdueOnly, setOverdueOnly] = useState(false);
 
-  // ── In-page auth guard ───────────────────────────────────────────────────
-  const { authUser, loading: authLoading } = useAuth();
+  // ── Role guard (admin + librarian) ───────────────────────────────────────
+  const { authUser, role, loading: authLoading } = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (!authLoading && !authUser) router.replace('/login');
-  }, [authUser, authLoading, router]);
+    if (authLoading) return;
+    if (!authUser) router.replace('/login');
+    else if (role !== 'admin' && role !== 'librarian') router.replace('/dashboard');
+  }, [authUser, role, authLoading, router]);
 
-  const { data, isLoading, isError } = useBorrowHistory({ page, status: statusFilter });
-  const returnBook = useReturnBook();
-
-  const handleReturn = async (borrowId: string) => {
-    try {
-      await returnBook.mutateAsync(borrowId);
-      toast.success('Book returned successfully!');
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Could not return book.';
-      toast.error(message);
-    }
-  };
+  const { data, isLoading, isError } = useAdminBorrows({
+    page,
+    limit: 20,
+    status: overdueOnly ? undefined : statusFilter,
+    overdue: overdueOnly || undefined,
+  });
 
   const getBookTitle = (bookId: string | Book) =>
     typeof bookId === 'object' ? bookId.title : bookId;
 
-  /** Display the computed status (overdue detection) or raw status */
+  const getUserEmail = (userId: string | User) =>
+    typeof userId === 'object' ? userId.email : userId;
+
   const getDisplayStatus = (record: { status: BorrowStatus; computedStatus?: string }) =>
     (record.computedStatus ?? record.status) as string;
 
   return (
     <AppLayout>
       <PageHeader
-        title="Borrow History"
-        description="Your past and active borrows."
+        title="All Borrows"
+        description="View and manage all borrow records across users."
       />
 
-      {/* Status filter tabs */}
-      <div className="mb-4 flex flex-wrap gap-2">
+      {/* Filters */}
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         {STATUS_FILTERS.map((f) => (
           <Button
             key={f.label}
-            variant={statusFilter === f.value ? 'default' : 'outline'}
+            variant={!overdueOnly && statusFilter === f.value ? 'default' : 'outline'}
             size="sm"
-            onClick={() => { setStatusFilter(f.value); setPage(1); }}
+            onClick={() => {
+              setOverdueOnly(false);
+              setStatusFilter(f.value);
+              setPage(1);
+            }}
           >
             {f.label}
           </Button>
         ))}
+        <div className="mx-2 h-6 w-px bg-border" />
+        <Button
+          variant={overdueOnly ? 'destructive' : 'outline'}
+          size="sm"
+          onClick={() => {
+            setOverdueOnly(!overdueOnly);
+            setStatusFilter(undefined);
+            setPage(1);
+          }}
+        >
+          Overdue Only
+        </Button>
       </div>
 
       {isLoading && (
@@ -91,13 +105,10 @@ export default function HistoryPage() {
         </div>
       )}
 
-      {isError && <ErrorMessage message="Failed to load history. Please refresh." />}
+      {isError && <ErrorMessage message="Failed to load borrow records." />}
 
       {data && data.items.length === 0 && (
-        <EmptyState
-          title="No borrow records yet"
-          description={statusFilter ? 'No records match this filter.' : 'Go to Dashboard and borrow your first book!'}
-        />
+        <EmptyState title="No records found" description="No borrow records match the current filter." />
       )}
 
       {data && data.items.length > 0 && (
@@ -106,23 +117,21 @@ export default function HistoryPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>User</TableHead>
                   <TableHead>Book</TableHead>
                   <TableHead>Borrowed</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Fine</TableHead>
-                  <TableHead />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.items.map((record) => {
                   const displayStatus = getDisplayStatus(record);
-                  const isActive = displayStatus === 'borrowed' || displayStatus === 'overdue';
                   return (
                     <TableRow key={record._id}>
-                      <TableCell className="font-medium">
-                        {getBookTitle(record.bookId)}
-                      </TableCell>
+                      <TableCell className="text-sm">{getUserEmail(record.userId)}</TableCell>
+                      <TableCell className="font-medium">{getBookTitle(record.bookId)}</TableCell>
                       <TableCell>{format(new Date(record.borrowedAt), 'dd MMM yyyy')}</TableCell>
                       <TableCell>{format(new Date(record.dueDate), 'dd MMM yyyy')}</TableCell>
                       <TableCell>
@@ -137,18 +146,6 @@ export default function HistoryPage() {
                           </span>
                         ) : '—'}
                       </TableCell>
-                      <TableCell>
-                        {isActive ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={returnBook.isPending}
-                            onClick={() => handleReturn(record._id)}
-                          >
-                            Return
-                          </Button>
-                        ) : null}
-                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -156,7 +153,6 @@ export default function HistoryPage() {
             </Table>
           </div>
 
-          {/* Pagination */}
           <div className="mt-4 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Page {data.pagination.page} of {data.pagination.totalPages}

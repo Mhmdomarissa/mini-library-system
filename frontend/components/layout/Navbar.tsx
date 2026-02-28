@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BookOpen, LogOut, LayoutDashboard, Library, History } from 'lucide-react';
+import { BookOpen, LogOut, LayoutDashboard, Library, History, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -45,13 +45,21 @@ export function Navbar() {
               History
             </Link>
           </Button>
-          {role === 'admin' && (
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/admin/books">
-                <Library className="mr-1 h-4 w-4" />
-                Manage Books
-              </Link>
-            </Button>
+          {(role === 'admin' || role === 'librarian') && (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/admin/books">
+                  <Library className="mr-1 h-4 w-4" />
+                  Manage Books
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/admin/borrows">
+                  <ClipboardList className="mr-1 h-4 w-4" />
+                  All Borrows
+                </Link>
+              </Button>
+            </>
           )}
         </nav>
 
@@ -60,7 +68,7 @@ export function Navbar() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
-                {authUser.profile.displayName || authUser.firebaseUser.email}
+                {authUser.profile.name || authUser.firebaseUser.email}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
