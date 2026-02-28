@@ -42,9 +42,12 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (firebaseUser) => {
+    let unsubscribe: (() => void) | undefined;
+    try {
+      unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (firebaseUser) => {
       if (firebaseUser) {
         try {
           // Fetch the backend user profile (includes role)
@@ -76,9 +79,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         Cookies.remove('__role');
       }
       setLoading(false);
-    });
-
-    return unsubscribe;
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Firebase initialization failed';
+      setInitError(msg);
+      setLoading(false);
+    }
+    return () => unsubscribe?.();
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -100,7 +107,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logOut,
       }}
     >
-      {children}
+      {initError ? (
+        <div className="flex min-h-screen items-center justify-center p-8 text-center">
+          <div>
+            <p className="text-lg font-semibold text-destructive">Configuration error</p>
+            <p className="mt-2 text-sm text-muted-foreground">{initError}</p>
+          </div>
+        </div>
+      ) : children}
     </AuthContext.Provider>
   );
 }
