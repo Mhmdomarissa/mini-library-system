@@ -46,7 +46,34 @@ app.use(
   }),
 );
 
-app.use(cors());
+// ── CORS ─────────────────────────────────────────────────────────────────
+// ALLOWED_ORIGINS is a comma-separated list of permitted front-end origins.
+// Example: ALLOWED_ORIGINS=https://myapp.com,https://staging.myapp.com
+// If unset (local dev), all origins are allowed so tooling (Postman, etc.) works.
+// In production this MUST be set — a missing value logs an error and falls back
+// to deny-all rather than silently opening the API to the world.
+const rawOrigins = process.env.ALLOWED_ORIGINS;
+let corsOrigin: string | string[] | boolean;
+
+if (!rawOrigins) {
+  if (process.env.NODE_ENV === 'production') {
+    logger.error('ALLOWED_ORIGINS is not set in production — CORS will deny all origins');
+    corsOrigin = false; // deny all origins in production if env var is missing
+  } else {
+    corsOrigin = true; // allow all in local dev
+  }
+} else {
+  corsOrigin = rawOrigins.split(',').map((o) => o.trim());
+}
+
+app.use(
+  cors({
+    origin: corsOrigin,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Authorization', 'Content-Type'],
+    credentials: true,
+  }),
+);
 app.use(express.json({ limit: '10kb' })); // reject oversized bodies early
 app.use(express.urlencoded({ extended: true }));
 

@@ -332,6 +332,7 @@ docker compose up --build
 | `MAX_ACTIVE_BORROWS` | No | `5` | Maximum concurrent borrows per member |
 | `FINE_PER_DAY` | No | `1` | Fine amount per overdue day (currency-neutral) |
 | `OPENAI_API_KEY` | No | — | If unset, embedding endpoints return 503; server still starts |
+| `ALLOWED_ORIGINS` | No* | — | Comma-separated list of permitted CORS origins. **Must be set in production.** Unset = allow all (dev only) |
 
 ---
 
