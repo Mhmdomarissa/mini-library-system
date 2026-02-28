@@ -1,8 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { BookOpen, LogOut, LayoutDashboard, Library, History, ClipboardList } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { BookOpen, LogOut, LayoutDashboard, Library, History, ClipboardList, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,16 +12,44 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/features/auth';
+import { cn } from '@/lib/utils';
+
+interface NavLink {
+  href: string;
+  label: string;
+  icon: React.ReactNode;
+  adminOnly?: boolean;
+}
+
+const NAV_LINKS: NavLink[] = [
+  { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="mr-1.5 h-4 w-4" /> },
+  { href: '/dashboard/history', label: 'History', icon: <History className="mr-1.5 h-4 w-4" /> },
+  { href: '/admin/books', label: 'Manage Books', icon: <Library className="mr-1.5 h-4 w-4" />, adminOnly: true },
+  { href: '/admin/borrows', label: 'All Borrows', icon: <ClipboardList className="mr-1.5 h-4 w-4" />, adminOnly: true },
+];
 
 export function Navbar() {
   const { authUser, role, logOut } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isAdmin = role === 'admin' || role === 'librarian';
 
   const handleLogOut = async () => {
     await logOut();
     router.push('/login');
   };
+
+  const visibleLinks = NAV_LINKS.filter((link) => !link.adminOnly || isAdmin);
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
@@ -31,59 +60,117 @@ export function Navbar() {
           <span>Mini Library</span>
         </Link>
 
-        {/* Nav links */}
+        {/* Desktop nav links */}
         <nav className="hidden items-center gap-1 md:flex">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/dashboard">
-              <LayoutDashboard className="mr-1 h-4 w-4" />
-              Dashboard
-            </Link>
-          </Button>
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/dashboard/history">
-              <History className="mr-1 h-4 w-4" />
-              History
-            </Link>
-          </Button>
-          {(role === 'admin' || role === 'librarian') && (
-            <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/admin/books">
-                  <Library className="mr-1 h-4 w-4" />
-                  Manage Books
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/admin/borrows">
-                  <ClipboardList className="mr-1 h-4 w-4" />
-                  All Borrows
-                </Link>
-              </Button>
-            </>
-          )}
+          {visibleLinks.map((link) => (
+            <Button
+              key={link.href}
+              variant={pathname === link.href ? 'secondary' : 'ghost'}
+              size="sm"
+              asChild
+            >
+              <Link href={link.href}>
+                {link.icon}
+                {link.label}
+              </Link>
+            </Button>
+          ))}
         </nav>
 
-        {/* User dropdown */}
-        {authUser && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                {authUser.profile.name || authUser.firebaseUser.email}
+        <div className="flex items-center gap-2">
+          {/* Role badge (desktop) */}
+          {role && (
+            <Badge variant="outline" className="hidden text-xs capitalize md:inline-flex">
+              {role}
+            </Badge>
+          )}
+
+          {/* User dropdown (desktop) */}
+          {authUser && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="hidden md:inline-flex">
+                  {authUser.profile.name || authUser.firebaseUser.email}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem disabled className="text-xs text-muted-foreground">
+                  {authUser.profile.email}
+                </DropdownMenuItem>
+                {role && (
+                  <DropdownMenuItem disabled className="text-xs text-muted-foreground capitalize">
+                    Role: {role}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogOut}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
+          {/* Mobile hamburger */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Open menu</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile navigation sheet */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left" className="w-72">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5" />
+              Mini Library
+            </SheetTitle>
+          </SheetHeader>
+          <nav className="flex flex-col gap-1 px-4">
+            {visibleLinks.map((link) => (
+              <Button
+                key={link.href}
+                variant={pathname === link.href ? 'secondary' : 'ghost'}
+                className="justify-start"
+                asChild
+                onClick={() => setMobileOpen(false)}
+              >
+                <Link href={link.href}>
+                  {link.icon}
+                  {link.label}
+                </Link>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem disabled className="text-xs text-muted-foreground">
-                {authUser.profile.email}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogOut}>
+            ))}
+          </nav>
+          {authUser && (
+            <div className="mt-auto border-t px-4 pt-4">
+              <p className="text-sm font-medium">{authUser.profile.name || authUser.firebaseUser.email}</p>
+              <p className="text-xs text-muted-foreground">{authUser.profile.email}</p>
+              {role && (
+                <Badge variant="outline" className="mt-1 text-xs capitalize">
+                  {role}
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-3 w-full justify-start text-destructive hover:text-destructive"
+                onClick={handleLogOut}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
-      </div>
+              </Button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </header>
   );
 }

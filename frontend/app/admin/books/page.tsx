@@ -6,16 +6,16 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import type { SubmitHandler } from 'react-hook-form';
 import {
@@ -35,9 +35,17 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { AppLayout } from '@/components/layout';
-import { PageHeader, LoadingSpinner, ErrorMessage, EmptyState } from '@/components/shared';
+import {
+  PageHeader,
+  ErrorMessage,
+  EmptyState,
+  TableSkeleton,
+  PaginationControls,
+  ConfirmDialog,
+} from '@/components/shared';
 import { useBooks, useCreateBook, useUpdateBook, useDeleteBook } from '@/features/books';
 import { useAuth } from '@/features/auth';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { Book, CreateBookPayload, UpdateBookPayload } from '@/types';
 
 const bookSchema = z.object({
@@ -125,7 +133,7 @@ function BookFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Book' : 'Add New Book'}</DialogTitle>
         </DialogHeader>
@@ -154,7 +162,11 @@ function BookFormDialog({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input placeholder="Brief description (used for AI search)" {...f} />
+                    <Textarea
+                      placeholder="Brief description (used for AI semantic search)"
+                      className="min-h-20 resize-none"
+                      {...f}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -204,8 +216,11 @@ function BookFormDialog({
 
 export default function AdminBooksPage() {
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Book | null>(null);
+  const debouncedSearch = useDebounce(search, 300);
 
   // ── In-page role guard (admin + librarian) ───────────────────────────────
   const { authUser, role, loading: authLoading } = useAuth();
@@ -216,7 +231,11 @@ export default function AdminBooksPage() {
     else if (role !== 'admin' && role !== 'librarian') router.replace('/dashboard');
   }, [authUser, role, authLoading, router]);
 
-  const { data, isLoading, isError } = useBooks({ page, limit: 20 });
+  const { data, isLoading, isError } = useBooks({
+    page,
+    limit: 20,
+    search: debouncedSearch || undefined,
+  });
   const deleteBook = useDeleteBook();
 
   const handleEdit = (book: Book) => {
@@ -229,15 +248,22 @@ export default function AdminBooksPage() {
     setDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Delete this book? This action cannot be undone.')) return;
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteBook.mutateAsync(id);
-      toast.success('Book deleted.');
+      await deleteBook.mutateAsync(deleteTarget._id);
+      toast.success(`"${deleteTarget.title}" deleted.`);
+      setDeleteTarget(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to delete book.';
       toast.error(message);
     }
+  };
+
+  const statusVariant = (status: string) => {
+    if (status === 'available') return 'default' as const;
+    if (status === 'out_of_stock') return 'destructive' as const;
+    return 'secondary' as const;
   };
 
   return (
@@ -253,27 +279,50 @@ export default function AdminBooksPage() {
         }
       />
 
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Search books…"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
       <BookFormDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         editingBook={editingBook}
       />
 
-      {isLoading && (
-        <div className="flex justify-center py-20">
-          <LoadingSpinner size="lg" />
-        </div>
-      )}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        title="Delete Book"
+        description={`Are you sure you want to delete "${deleteTarget?.title}"? This will soft-delete the book and it will no longer appear in search results.`}
+        confirmLabel="Delete"
+        variant="destructive"
+        loading={deleteBook.isPending}
+        onConfirm={handleDeleteConfirm}
+      />
+
+      {isLoading && <TableSkeleton rows={8} columns={8} />}
 
       {isError && <ErrorMessage message="Failed to load books." />}
 
       {data && data.items.length === 0 && (
-        <EmptyState title="No books yet" description="Add your first book above." />
+        <EmptyState
+          title={debouncedSearch ? 'No matching books' : 'No books yet'}
+          description={debouncedSearch ? 'Try a different search.' : 'Add your first book above.'}
+        />
       )}
 
       {data && data.items.length > 0 && (
         <>
-          <div className="rounded-md border">
+          <div className="overflow-x-auto rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -281,8 +330,8 @@ export default function AdminBooksPage() {
                   <TableHead>Author</TableHead>
                   <TableHead>Genre</TableHead>
                   <TableHead>ISBN</TableHead>
-                  <TableHead>Copies</TableHead>
-                  <TableHead>Available</TableHead>
+                  <TableHead className="text-center">Copies</TableHead>
+                  <TableHead className="text-center">Available</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead />
                 </TableRow>
@@ -290,23 +339,34 @@ export default function AdminBooksPage() {
               <TableBody>
                 {data.items.map((book) => (
                   <TableRow key={book._id}>
-                    <TableCell className="font-medium">{book.title}</TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{book.title}</p>
+                        {book.description && (
+                          <p className="line-clamp-1 text-xs text-muted-foreground">{book.description}</p>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{book.author}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">{book.genre}</Badge>
                     </TableCell>
                     <TableCell className="font-mono text-xs">{book.isbn}</TableCell>
-                    <TableCell>{book.totalCopies}</TableCell>
-                    <TableCell>{book.availableCopies}</TableCell>
+                    <TableCell className="text-center">{book.totalCopies}</TableCell>
+                    <TableCell className="text-center">
+                      <span className={book.availableCopies === 0 ? 'font-medium text-destructive' : ''}>
+                        {book.availableCopies}
+                      </span>
+                    </TableCell>
                     <TableCell>
-                      <Badge variant={book.status === 'available' ? 'default' : 'destructive'}>
+                      <Badge variant={statusVariant(book.status)}>
                         {book.status.replace('_', ' ')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button
-                          size="icon"
+                          size="icon-sm"
                           variant="ghost"
                           onClick={() => handleEdit(book)}
                           title="Edit book"
@@ -315,10 +375,10 @@ export default function AdminBooksPage() {
                         </Button>
                         {role === 'admin' && (
                           <Button
-                            size="icon"
+                            size="icon-sm"
                             variant="ghost"
                             className="text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(book._id)}
+                            onClick={() => setDeleteTarget(book)}
                             disabled={deleteBook.isPending}
                             title="Delete book"
                           >
@@ -333,24 +393,11 @@ export default function AdminBooksPage() {
             </Table>
           </div>
 
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Page {data.pagination.page} of {data.pagination.totalPages} · {data.pagination.totalItems} books total
-            </p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={!data.pagination.hasPrevPage} onClick={() => setPage((p) => p - 1)}>
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!data.pagination.hasNextPage}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          <PaginationControls
+            pagination={data.pagination}
+            onPageChange={setPage}
+            noun="book"
+          />
         </>
       )}
     </AppLayout>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,10 +16,16 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { AppLayout } from '@/components/layout';
-import { PageHeader, LoadingSpinner, ErrorMessage, EmptyState } from '@/components/shared';
+import {
+  PageHeader,
+  ErrorMessage,
+  EmptyState,
+  TableSkeleton,
+  PaginationControls,
+} from '@/components/shared';
 import { useBorrowHistory, useReturnBook } from '@/features/borrow';
 import { useAuth } from '@/features/auth';
-import type { Book, BorrowStatus } from '@/types';
+import type { Book, BorrowRecord, BorrowStatus } from '@/types';
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
   borrowed: 'default',
@@ -49,8 +56,15 @@ export default function HistoryPage() {
 
   const handleReturn = async (borrowId: string) => {
     try {
-      await returnBook.mutateAsync(borrowId);
-      toast.success('Book returned successfully!');
+      const result = await returnBook.mutateAsync(borrowId);
+      const record = result.borrowRecord;
+      if (record.fine && record.fine > 0) {
+        toast.warning('Book returned with a fine', {
+          description: `${record.daysOverdue} day${record.daysOverdue !== 1 ? 's' : ''} overdue · Fine: $${record.fine.toFixed(2)}`,
+        });
+      } else {
+        toast.success('Book returned successfully!');
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Could not return book.';
       toast.error(message);
@@ -61,7 +75,7 @@ export default function HistoryPage() {
     typeof bookId === 'object' ? bookId.title : bookId;
 
   /** Display the computed status (overdue detection) or raw status */
-  const getDisplayStatus = (record: { status: BorrowStatus; computedStatus?: string }) =>
+  const getDisplayStatus = (record: BorrowRecord) =>
     (record.computedStatus ?? record.status) as string;
 
   return (
@@ -85,11 +99,7 @@ export default function HistoryPage() {
         ))}
       </div>
 
-      {isLoading && (
-        <div className="flex justify-center py-20">
-          <LoadingSpinner size="lg" />
-        </div>
-      )}
+      {isLoading && <TableSkeleton rows={5} columns={7} />}
 
       {isError && <ErrorMessage message="Failed to load history. Please refresh." />}
 
@@ -102,13 +112,14 @@ export default function HistoryPage() {
 
       {data && data.items.length > 0 && (
         <>
-          <div className="rounded-md border">
+          <div className="overflow-x-auto rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Book</TableHead>
                   <TableHead>Borrowed</TableHead>
                   <TableHead>Due</TableHead>
+                  <TableHead>Returned</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Fine</TableHead>
                   <TableHead />
@@ -118,36 +129,58 @@ export default function HistoryPage() {
                 {data.items.map((record) => {
                   const displayStatus = getDisplayStatus(record);
                   const isActive = displayStatus === 'borrowed' || displayStatus === 'overdue';
+                  const isOverdue = displayStatus === 'overdue';
                   return (
-                    <TableRow key={record._id}>
+                    <TableRow key={record._id} className={isOverdue ? 'bg-destructive/5' : ''}>
                       <TableCell className="font-medium">
                         {getBookTitle(record.bookId)}
                       </TableCell>
-                      <TableCell>{format(new Date(record.borrowedAt), 'dd MMM yyyy')}</TableCell>
-                      <TableCell>{format(new Date(record.dueDate), 'dd MMM yyyy')}</TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(record.borrowedAt), 'dd MMM yyyy')}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {format(new Date(record.dueDate), 'dd MMM yyyy')}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {record.returnedAt
+                          ? format(new Date(record.returnedAt), 'dd MMM yyyy')
+                          : '—'}
+                      </TableCell>
                       <TableCell>
-                        <Badge variant={statusVariant[displayStatus] ?? 'default'}>
-                          {displayStatus}
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant={statusVariant[displayStatus] ?? 'default'}>
+                            {displayStatus}
+                          </Badge>
+                          {isOverdue && record.daysOverdue && record.daysOverdue > 0 && (
+                            <span className="flex items-center gap-0.5 text-xs font-medium text-destructive">
+                              <AlertCircle className="h-3 w-3" />
+                              {record.daysOverdue}d
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {record.fine && record.fine > 0 ? (
-                          <span className="font-medium text-destructive">
+                          <span className="font-semibold text-destructive">
                             ${record.fine.toFixed(2)}
                           </span>
-                        ) : '—'}
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                       <TableCell>
-                        {isActive ? (
+                        {isActive && (
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant={isOverdue ? 'destructive' : 'outline'}
                             disabled={returnBook.isPending}
                             onClick={() => handleReturn(record._id)}
                           >
-                            Return
+                            {returnBook.isPending
+                              ? <Loader2 className="h-3 w-3 animate-spin" />
+                              : 'Return'}
                           </Button>
-                        ) : null}
+                        )}
                       </TableCell>
                     </TableRow>
                   );
@@ -156,32 +189,11 @@ export default function HistoryPage() {
             </Table>
           </div>
 
-          {/* Pagination */}
-          <div className="mt-4 flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Page {data.pagination.page} of {data.pagination.totalPages}
-              {' · '}
-              {data.pagination.totalItems} record{data.pagination.totalItems !== 1 ? 's' : ''}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!data.pagination.hasPrevPage}
-                onClick={() => setPage((p) => p - 1)}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!data.pagination.hasNextPage}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+          <PaginationControls
+            pagination={data.pagination}
+            onPageChange={setPage}
+            noun="record"
+          />
         </>
       )}
     </AppLayout>
