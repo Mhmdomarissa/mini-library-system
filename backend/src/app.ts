@@ -12,6 +12,7 @@ import { generalLimiter, strictLimiter, adminLimiter } from './middleware/rateLi
 import bookRoutes from './routes/book.routes';
 import borrowRoutes from './routes/borrow.routes';
 import adminRoutes from './routes/admin.routes';
+import authRoutes from './routes/auth.routes';
 
 const app: Application = express();
 
@@ -119,6 +120,7 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // ── API Routes (with per-group rate limiting) ─────────────────────────────
+app.use('/api/auth', generalLimiter, authRoutes);
 app.use('/api/books', generalLimiter, bookRoutes);
 app.use('/api/borrow', strictLimiter, borrowRoutes);
 app.use('/api/admin', adminLimiter, adminRoutes);
