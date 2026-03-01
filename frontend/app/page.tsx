@@ -48,37 +48,37 @@ const FEATURES = [
     icon: BookMarked,
     color: 'bg-primary/10 text-primary',
     title: 'Smart Borrowing',
-    description: 'Atomic transactions, due dates, per-member limits, and real-time availability tracking.',
+    description: 'Due dates, per-member limits, and real-time availability — borrowing that just works.',
   },
   {
     icon: Sparkles,
     color: 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
     title: 'AI Semantic Search',
-    description: 'Natural language search via OpenAI embeddings — find books by concept, not just keywords.',
+    description: 'Search by meaning, not just words — describe what you want and find the perfect book instantly.',
   },
   {
     icon: Bot,
     color: 'bg-sky-100 text-sky-600 dark:bg-sky-900/30 dark:text-sky-400',
     title: 'Librarian Chatbot',
-    description: 'RAG assistant knows your catalogue and borrow history — ask anything, get personal picks.',
+    description: 'Your personal AI librarian knows your reading history — ask anything and get tailored recommendations.',
   },
   {
     icon: Zap,
     color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-    title: 'Fine Calculation',
-    description: 'Automatic overdue detection and fine computation at return time. Configurable daily rate.',
+    title: 'Automatic Fines',
+    description: 'Overdue books are tracked automatically and fines are calculated instantly when you return them.',
   },
   {
     icon: ShieldCheck,
     color: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
     title: 'Role-Based Access',
-    description: 'Granular RBAC — members, librarians, and admins each get their own tailored dashboard.',
+    description: 'Members, librarians, and admins each get their own tailored view and permissions.',
   },
   {
     icon: CheckCircle2,
     color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400',
-    title: 'Production-Grade',
-    description: 'ACID transactions, Firebase auth, Helmet security, rate limiting — real-world ready.',
+    title: 'Reliable & Secure',
+    description: 'Every borrow and return is safe and consistent — your data is always accurate and protected.',
   },
 ] as const;
 
@@ -177,7 +177,7 @@ export default function LandingPage() {
               custom={0.2}
               className="flex flex-col gap-1.5 text-sm text-muted-foreground"
             >
-              {['No credit card required', 'Firebase-secured auth', 'Dark mode included'].map((t) => (
+              {['No credit card required', 'Secure sign-in included', 'Dark mode included'].map((t) => (
                 <li key={t} className="flex items-center gap-2">
                   <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary" />
                   {t}
@@ -212,9 +212,9 @@ export default function LandingPage() {
         <div className="mx-auto grid max-w-6xl grid-cols-2 divide-x divide-border px-6 py-8 sm:grid-cols-4 md:px-10">
           {[
             { value: '∞', label: 'Books in catalogue' },
-            { value: 'AI', label: 'Semantic + RAG search' },
-            { value: 'ACID', label: 'Transactional borrows' },
-            { value: 'RBAC', label: 'Role-based access' },
+            { value: 'AI', label: 'Smart search & chat' },
+            { value: '100%', label: 'Reliable borrows' },
+            { value: '3', label: 'Member · Staff · Admin' },
           ].map(({ value, label }) => (
             <div key={label} className="flex flex-col items-center gap-1 px-4 py-2 text-center">
               <span className="text-2xl font-extrabold text-primary">{value}</span>
@@ -237,7 +237,7 @@ export default function LandingPage() {
             Everything a modern library needs
           </h2>
           <p className="mt-3 text-muted-foreground">
-            From borrow transactions to AI chat — production-grade, out of the box.
+            From borrowing books to AI-powered recommendations — everything in one clean place.
           </p>
         </motion.div>
 
@@ -300,7 +300,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-primary" />
             <span className="font-medium text-foreground">Mini Library</span>
-            <span>· Built with Next.js, MongoDB, Firebase & OpenAI</span>
+            <span>· All rights reserved © 2026</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login" className="transition-colors hover:text-foreground">Sign in</Link>
