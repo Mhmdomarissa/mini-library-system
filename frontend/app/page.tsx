@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
-  BookOpen,
   Zap,
   ShieldCheck,
   Sparkles,
@@ -18,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Book3D } from '@/components/rareui/Book3D';
+import { LexoraLogo } from '@/components/shared';
 import { useAuth } from '@/features/auth';
 
 const fadeUp = {
@@ -96,9 +96,8 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background">
       {/* ── Nav ── */}
       <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between border-b border-border/60 bg-background/80 px-6 backdrop-blur-xl md:px-10">
-        <Link href="/" className="flex items-center gap-2 font-bold text-foreground">
-          <BookOpen className="h-5 w-5 text-primary" />
-          <span>Mini Library</span>
+        <Link href="/" className="transition-opacity hover:opacity-80">
+          <LexoraLogo size={24} textSize="text-base" />
         </Link>
         <nav className="flex items-center gap-2">
           <Button variant="ghost" size="sm" asChild>
@@ -298,8 +297,7 @@ export default function LandingPage() {
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-muted-foreground sm:flex-row md:px-10">
           <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-primary" />
-            <span className="font-medium text-foreground">Mini Library</span>
+            <LexoraLogo size={18} textSize="text-sm" />
             <span>· All rights reserved © 2026</span>
           </div>
           <div className="flex items-center gap-4">

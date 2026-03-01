@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { BookOpen } from 'lucide-react';
+import { LexoraLogo } from '@/components/shared';
 import {
   Form,
   FormControl,
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { useAuth } from '@/features/auth';
 
 const schema = z.object({
@@ -60,13 +60,10 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,oklch(0.511_0.262_265.3/0.08),transparent)]" />
       <Card className="relative w-full max-w-md shadow-xl">
         <CardHeader className="pb-6 text-center">
-          <div className="mb-3 flex justify-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
-              <BookOpen className="h-6 w-6 text-primary" />
-            </div>
+          <div className="mb-4 flex justify-center">
+            <LexoraLogo size={40} textSize="text-2xl" />
           </div>
-          <CardTitle className="text-2xl font-extrabold">Mini Library</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+          <CardDescription className="text-sm">Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

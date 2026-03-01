@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { BookOpen } from 'lucide-react';
+import { LexoraLogo } from '@/components/shared';
 import {
   Form,
   FormControl,
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { useAuth } from '@/features/auth';
 
 const schema = z
@@ -53,7 +53,7 @@ export default function SignUpPage() {
   const onSubmit = async (values: FormValues) => {
     try {
       await signUp(values.email, values.password, values.name);
-      toast.success('Account created! Welcome to Mini Library.');
+      toast.success('Account created! Welcome to Lexora.');
     } catch (err: unknown) {
       if (err instanceof Error && err.message.includes('email-already-in-use')) {
         toast.error('This email is already registered. Please sign in instead.');
@@ -66,14 +66,14 @@ export default function SignUpPage() {
   if (loading) return null;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <div className="mb-2 flex justify-center">
-            <BookOpen className="h-8 w-8" />
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,oklch(0.511_0.262_265.3/0.08),transparent)]" />
+      <Card className="relative w-full max-w-md shadow-xl">
+        <CardHeader className="pb-6 text-center">
+          <div className="mb-4 flex justify-center">
+            <LexoraLogo size={40} textSize="text-2xl" />
           </div>
-          <CardTitle className="text-2xl">Create Account</CardTitle>
-          <CardDescription>Sign up to start borrowing books</CardDescription>
+          <CardDescription className="text-sm">Create your account to start borrowing</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>

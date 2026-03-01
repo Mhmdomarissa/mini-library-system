@@ -155,7 +155,7 @@ export function Book3D({
             textTransform: 'uppercase',
             whiteSpace: 'nowrap',
           }}>
-            Mini Library
+            Lexora
           </div>
         </div>
 

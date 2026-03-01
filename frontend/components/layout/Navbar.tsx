@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BookOpen, LogOut, LayoutDashboard, Library, History, ClipboardList, Users, Menu, MessageSquare } from 'lucide-react';
+import { LogOut, LayoutDashboard, Library, History, ClipboardList, Users, Menu, MessageSquare } from 'lucide-react';
+import { LexoraLogo } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -81,9 +82,8 @@ export function Navbar() {
     <header className={cn('sticky top-0 z-40 border-b bg-background/80 backdrop-blur transition-shadow', scrolled && 'shadow-sm')}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
         {/* Brand */}
-        <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-foreground hover:text-primary transition-colors">
-          <BookOpen className="h-5 w-5 text-primary" />
-          <span>Mini Library</span>
+        <Link href="/dashboard" className="transition-opacity hover:opacity-80">
+          <LexoraLogo size={24} textSize="text-base" />
         </Link>
 
         {/* Desktop nav links */}
@@ -165,9 +165,8 @@ export function Navbar() {
       <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
         <SheetContent side="left" className="w-72">
           <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Mini Library
+            <SheetTitle asChild>
+              <div><LexoraLogo size={22} textSize="text-base" /></div>
             </SheetTitle>
           </SheetHeader>
           <nav className="flex flex-col gap-1 px-4">

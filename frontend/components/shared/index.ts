@@ -5,3 +5,4 @@ export { EmptyState } from './EmptyState';
 export { PaginationControls } from './PaginationControls';
 export { ConfirmDialog } from './ConfirmDialog';
 export { BookCardGridSkeleton, TableSkeleton } from './Skeletons';
+export { LexoraLogo } from './LexoraLogo';

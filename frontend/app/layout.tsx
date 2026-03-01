@@ -15,10 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Mini Library — AI-Powered Book Management',
+  title: 'Lexora — Your Intelligent Library',
   description:
-    'Borrow, search, and manage books with semantic search, a RAG librarian chatbot, and role-based access. Built with Next.js, MongoDB, Firebase & OpenAI.',
-  keywords: ['library', 'books', 'borrow', 'AI search', 'semantic search', 'librarian chatbot'],
+    'Borrow, search, and manage books with AI-powered recommendations, semantic search, and a personal librarian chatbot.',
+  keywords: ['library', 'books', 'borrow', 'AI search', 'semantic search', 'librarian'],
 };
 
 export default function RootLayout({
