@@ -11,6 +11,8 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   updateProfile,
   signOut,
   User as FirebaseUser,
@@ -33,6 +35,7 @@ interface AuthContextValue {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   logOut: () => Promise<void>;
 }
 
@@ -102,6 +105,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // onAuthStateChanged listener handles the rest (backend auto-creates user via upsert)
   };
 
+  const signInWithGoogleFn = async () => {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(getFirebaseAuth(), provider);
+    // onAuthStateChanged listener handles the rest (backend auto-creates user via upsert)
+  };
+
   const logOut = async () => {
     await signOut(getFirebaseAuth());
   };
@@ -114,6 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signIn,
         signUp,
+        signInWithGoogle: signInWithGoogleFn,
         logOut,
       }}
     >
