@@ -78,6 +78,18 @@ export function Navbar() {
     return true;
   });
 
+  /**
+   * Determine whether a nav link is "active".
+   *
+   * Exact match covers standalone pages (/dashboard, /dashboard/history, /chat).
+   * Prefix match is only applied to /admin/* sub-trees where routes can have
+   * dynamic segments (e.g. /admin/books/new). Using startsWith for /dashboard
+   * would incorrectly mark the "Dashboard" link active on /dashboard/history.
+   */
+  const isLinkActive = (href: string) =>
+    pathname === href ||
+    (href.startsWith('/admin') && pathname.startsWith(href + '/'));
+
   return (
     <header className={cn('sticky top-0 z-40 border-b bg-background/80 backdrop-blur transition-shadow', scrolled && 'shadow-sm')}>
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
@@ -89,7 +101,7 @@ export function Navbar() {
         {/* Desktop nav links */}
         <nav className="hidden items-center gap-1 md:flex">
           {visibleLinks.map((link) => {
-            const isActive = pathname === link.href || pathname.startsWith(link.href + '/');
+            const isActive = isLinkActive(link.href);
             return (
               <Button
                 key={link.href}
@@ -171,7 +183,7 @@ export function Navbar() {
           </SheetHeader>
           <nav className="flex flex-col gap-1 px-4">
           {visibleLinks.map((link) => {
-              const isActiveMobile = pathname === link.href || pathname.startsWith(link.href + '/');
+              const isActiveMobile = isLinkActive(link.href);
               return (
                 <Button
                   key={link.href}

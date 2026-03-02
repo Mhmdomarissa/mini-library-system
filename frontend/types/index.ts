@@ -104,6 +104,8 @@ export interface ChatSource {
 
 /** A single turn in the chat conversation (tracked client-side only) */
 export interface ChatMessage {
+  /** Stable key for React rendering — generated client-side with crypto.randomUUID() */
+  id: string;
   role: 'user' | 'assistant';
   content: string;
   sources?: ChatSource[];

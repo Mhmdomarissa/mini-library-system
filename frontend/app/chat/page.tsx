@@ -175,6 +175,7 @@ export default function ChatPage() {
 
     // Optimistically add user message
     const userMsg: ChatMessage = {
+      id: crypto.randomUUID(),
       role: 'user',
       content: text,
       timestamp: new Date(),
@@ -188,6 +189,7 @@ export default function ChatPage() {
     try {
       const res = await sendMessage.mutateAsync(text);
       const assistantMsg: ChatMessage = {
+        id: crypto.randomUUID(),
         role: 'assistant',
         content: res.reply,
         sources: res.sources,
@@ -247,8 +249,8 @@ export default function ChatPage() {
             <WelcomeScreen onSelect={(text) => { setInput(text); setTimeout(() => textareaRef.current?.focus(), 0); }} />
           ) : (
             <div className="flex flex-col gap-5">
-              {messages.map((msg, i) => (
-                <MessageBubble key={i} msg={msg} />
+              {messages.map((msg) => (
+                <MessageBubble key={msg.id} msg={msg} />
               ))}
               {sendMessage.isPending && <TypingIndicator />}
               <div ref={bottomRef} />
