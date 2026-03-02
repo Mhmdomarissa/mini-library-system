@@ -209,7 +209,7 @@ On book update, the embedding is only regenerated when `title`, `author`, or `de
 
 ### Why multi-stage build
 
-The builder stage uses the full `node:20-alpine` image with all `devDependencies` installed — TypeScript, ts-node, ESLint, type stubs. The production stage starts fresh from the same base and only installs `dependencies` (`npm ci --omit=dev`), then copies the compiled `dist/` from the builder.
+The builder stage uses the full `node:22-alpine` image with all `devDependencies` installed — TypeScript, ts-node, ESLint, type stubs. The production stage starts fresh from the same base and only installs `dependencies` (`npm ci --omit=dev`), then copies the compiled `dist/` from the builder.
 
 **Result:** the final image contains no TypeScript compiler, no source files, no test tooling. Image size is typically 60–70% smaller than a naive single-stage build.
 
@@ -286,7 +286,7 @@ All errors flow through a single `AppError` class with an HTTP `statusCode` and 
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+
 - A MongoDB instance running as a replica set on port 27017
 
   ```bash

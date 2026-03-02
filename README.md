@@ -50,7 +50,7 @@ The chat endpoint uses **Retrieval-Augmented Generation (RAG)**:
 ### Backend
 | Layer | Technology |
 |---|---|
-| Runtime | Node.js 20 + TypeScript |
+| Runtime | Node.js 22 + TypeScript |
 | Framework | Express 5 |
 | Database | MongoDB 7 + Mongoose (replica set for ACID transactions) |
 | Auth | Firebase Admin SDK |
@@ -132,7 +132,7 @@ Full Postman collection: [`postman/`](postman/)
 ## Running Locally
 
 ### Prerequisites
-- **Node.js 20+**
+- **Node.js 22+**
 - **MongoDB 7** running as a replica set — or **Docker + Docker Compose**
 
 ### Option A — Docker Compose (recommended)

@@ -1,6 +1,6 @@
 # -------- Build stage --------
 # Compiles TypeScript to JS; includes all devDependencies (tsc, type stubs, etc.)
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ RUN npm run build
 # -------- Production stage --------
 # Starts fresh from a clean image — no TypeScript compiler, no dev deps,
 # no source files. Only the compiled JS and production node_modules ship.
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
