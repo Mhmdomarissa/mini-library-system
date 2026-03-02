@@ -1,6 +1,6 @@
 # Lexora — AI-Powered Library Management System
 
-A full-stack library management system with **AI semantic search**, a **RAG librarian chatbot**, role-based access control, and a polished React frontend — built as a recruiter technical assessment.
+A full-stack library management system with **AI semantic search**, a **RAG librarian chatbot**, role-based access control, and a polished React frontend 
 
 | | Link |
 |---|---|
