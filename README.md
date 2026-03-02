@@ -1,189 +1,167 @@
 # Lexora — AI-Powered Library Management System
 
-A full-stack library management system built , demonstrating production-grade backend architecture, AI-powered semantic search, a RAG librarian chatbot, and a modern React frontend.
+A full-stack library management system with **AI semantic search**, a **RAG librarian chatbot**, role-based access control, and a polished React frontend — built as a recruiter technical assessment.
+
+| | Link |
+|---|---|
+| **Live Frontend** | [mini-library-system.vercel.app](https://mini-library-system.vercel.app) |
+| **Live Backend** | [mini-library-system-production.up.railway.app](https://mini-library-system-production.up.railway.app/health) |
+| **Source Code** | [github.com/Mhmdomarissa/mini-library-system](https://github.com/Mhmdomarissa/mini-library-system) |
 
 ---
 
-## Live Demo
+## Features
 
-| Service  | URL |
-|----------|-----|
-| Frontend | https://lexora.vercel.app *(Vercel)* |
-| Backend  | https://lexora-api.up.railway.app *(Railway)* |
+### For Members
+- Browse the full book catalogue with real-time keyword search and genre filters
+- **AI Semantic Search** — describe what you're looking for in natural language and get results ranked by meaning, not just keywords
+- **AI Librarian Chatbot** — a RAG-powered assistant that knows your reading history and the full catalogue; ask for recommendations, check availability, or explore genres
+- Borrow books with enforced per-member limits and automatic due dates
+- Return books with instant overdue detection and fine calculation
+- Full borrow history with status filters (active / returned / overdue)
+- **Google Sign-In** — one-click authentication alongside traditional email/password
+
+### For Admins & Librarians
+- Full CRUD on the book catalogue (create, edit, soft-delete)
+- View and manage all borrow records across all users
+- Force-return books on behalf of members
+- Manage user accounts: assign roles (member → librarian → admin), activate/deactivate
+- Debounced real-time search across books and users
+
+---
+
+## AI Features — What & Why
+
+### Semantic Search
+When a book is created, an **embedding vector** (1 536 dimensions) is generated using OpenAI's `text-embedding-3-small` model and stored alongside the document. At query time, the user's search is embedded and compared against all stored vectors using **cosine similarity**. This means searching *"a coming-of-age story set during a war"* finds relevant books even if those exact words never appear in any title or description.
+
+### RAG Librarian Chatbot
+The chat endpoint uses **Retrieval-Augmented Generation (RAG)**:
+1. The user's question is embedded
+2. The top-5 semantically similar books are retrieved from the catalogue
+3. The user's last 5 borrow records are fetched for personalisation
+4. All of this context is injected into a prompt sent to **GPT-4o-mini**
+5. The model responds with real catalogue data — no hallucinated book titles
 
 ---
 
 ## Tech Stack
 
 ### Backend
-| Layer | Technology | Why |
-|---|---|---|
-| Runtime | Node.js 20 + TypeScript | Type safety throughout; excellent ecosystem |
-| Framework | Express 5 | Minimal, composable, industry standard |
-| Database | MongoDB 7 + Mongoose | Flexible schema; transactions via replica set |
-| Auth | Firebase Admin SDK | Offloads auth complexity; JWT verification in 1 line |
-| AI | OpenAI `text-embedding-3-small` | High-quality embeddings at low cost |
-| Logging | Winston | Structured JSON logs, configurable levels |
-| Validation | Zod | Runtime schema validation matching TypeScript types |
-| Security | Helmet, express-rate-limit, CORS | Defense-in-depth; sane production defaults |
+| Layer | Technology |
+|---|---|
+| Runtime | Node.js 20 + TypeScript |
+| Framework | Express 5 |
+| Database | MongoDB 7 + Mongoose (replica set for ACID transactions) |
+| Auth | Firebase Admin SDK |
+| AI | OpenAI (`text-embedding-3-small` + `gpt-4o-mini`) |
+| Validation | Zod |
+| Logging | Winston (structured JSON) |
+| Security | Helmet, express-rate-limit, CORS |
 
 ### Frontend
-| Layer | Technology | Why |
-|---|---|---|
-| Framework | Next.js 16 (App Router) | RSC, file-based routing, Vercel-native |
-| UI | shadcn/ui + Tailwind CSS v4 | Accessible, unstyled primitives + utility classes |
-| State | TanStack Query v5 | Server state caching, optimistic updates, stale-while-revalidate |
-| Forms | React Hook Form + Zod | Performant uncontrolled forms with type-safe validation |
-| Auth | Firebase Client SDK | Pairs with backend Firebase Admin for seamless auth flow |
-| Animation | Framer Motion | Micro-interactions; page transitions |
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| UI | shadcn/ui + Tailwind CSS v4 |
+| Server State | TanStack Query v5 |
+| Forms | React Hook Form + Zod |
+| Auth | Firebase Client SDK (email/password + Google) |
+| Animation | Framer Motion |
 
 ---
 
 ## Architecture
 
-### Backend — Strict Three-Layer Separation
+### Backend — Three-Layer Separation
 
 ```
-HTTP Request
-    │
-    ▼
-Route              — registers middleware chain (authenticate → requireRole → validate)
-    │
-    ▼
-Controller         — HTTP only. Reads req, calls service, sends res.
-    │                 Zero business logic. Zero DB access.
-    ▼
-Service            — Business rules only. Throws AppError.
-    │                 Zero knowledge of Express (no req/res).
-    ▼
-Repository         — Database access only. Always applies { isDeleted: false }.
+Route        → middleware chain (authenticate → requireRole → validate)
+  ↓
+Controller   → HTTP only: reads req, calls service, sends res
+  ↓
+Service      → business rules only: throws AppError, no req/res knowledge
+  ↓
+Repository   → database access only: always applies { isDeleted: false }
 ```
 
-**Why this matters:** Services are fully unit-testable without spinning up Express. Controllers are trivially thin — impossible to accidentally mix HTTP concerns with business logic. Repositories can be swapped (e.g. MongoDB → PostgreSQL) without touching services.
+Services are fully unit-testable without Express. Controllers are trivially thin. Repositories can be swapped without touching business logic.
 
-### Frontend — Feature-Based Slice Architecture
+### Frontend — Feature-Based Slices
 
 ```
 features/
-  books/
-    services.ts     ← raw API calls (fetch wrappers)
-    hooks/          ← TanStack Query hooks wrapping services
-    index.ts        ← public barrel export
-  borrow/ auth/ admin/ chat/  (same pattern)
-
-components/
-  layout/   shared/   ui/     rareui/
+  books/    → services.ts (API calls) + hooks/ (TanStack Query) + index.ts
+  borrow/   → same pattern
+  auth/     → context.tsx (Firebase AuthProvider)
+  admin/    → services + hooks for user & borrow management
+  chat/     → services + hooks for AI chatbot
 ```
 
-No business logic lives in page components. Pages compose feature hooks and shared UI primitives.
-
----
-
-## Features
-
-### Member
-- Browse and keyword-search the full catalogue with availability status
-- **Semantic (AI) search** — describe what you want in natural language
-- Borrow a book (enforces per-member active-borrow limit)
-- Return a book (automatic overdue detection + fine calculation)
-- View full borrow history with status filter (active / returned / overdue)
-- **AI Librarian chatbot** — RAG assistant with access to catalogue + personal borrow history
-
-### Admin / Librarian
-- Full CRUD on books (create, edit, delete, restore)
-- View and manage all active borrows across members
-- Manage user roles (promote member → librarian → admin)
-- Debounced real-time search across books and users
-
----
-
-## Design Decisions
-
-### 1. Atomic Borrow Transactions (ACID)
-A borrow involves three writes that must be atomic:
-1. Check `availableCopies > 0`  
-2. Decrement `availableCopies` on the Book  
-3. Create a `BorrowRecord`
-
-Without a transaction, two concurrent requests can both read `availableCopies = 1`, both pass the guard, and both succeed — leaving the count at `-1`. MongoDB multi-document transactions (requiring a replica set) solve this. The borrow limit check is also placed **inside** the transaction to avoid TOCTOU (time-of-check/time-of-use) bugs.
-
-### 2. Semantic Search via Cosine Similarity
-When a book is created or updated, an embedding vector (1536 dimensions, OpenAI `text-embedding-3-small`) is stored alongside the document. At query time, the search query is embedded, then compared against all stored vectors using cosine similarity, sorted by score. No vector database required at this scale — the computation is O(n) and fast enough for tens of thousands of books.
-
-### 3. RAG Librarian Chatbot
-The chat endpoint retrieves the user's active borrows + the top-k semantically relevant books (via the same embedding pipeline), injects them as context, and calls the OpenAI Chat Completions API. The model therefore answers with real catalogue data rather than hallucinating.
-
-### 4. Partial Unique Index on ISBN
-`Book` uses a partial index: `{ isbn: 1 }, { unique: true, partialFilterExpression: { isDeleted: false } }`. This allows multiple "deleted" records with the same ISBN (so a book can be deleted and re-added) while still enforcing uniqueness for active books.
-
-### 5. Firebase Auth (not custom JWT)
-Firebase handles token issuance, refresh, email/password sign-in, and revocation. The backend verifies tokens using the Firebase Admin SDK in a single middleware line. This eliminates a significant attack surface (token forgery, weak secrets, improper expiry handling) that a home-grown JWT implementation would introduce.
+No business logic in page components — pages compose feature hooks and shared UI primitives.
 
 ---
 
 ## API Summary
 
-Full documentation: [`postman/`](postman/) — import the collection + environment into Postman.
+All endpoints require `Authorization: Bearer <firebase_id_token>` unless noted.
 
-| Method | Endpoint | Auth | Description |
+| Method | Endpoint | Role | Description |
 |--------|----------|------|-------------|
-| `GET` | `/api/books` | Public | Paginated book list, keyword search |
-| `GET` | `/api/books/search` | Auth | Semantic (AI) search |
-| `GET` | `/api/books/:id` | Auth | Single book |
-| `POST` | `/api/books` | Admin | Create book |
-| `PATCH` | `/api/books/:id` | Admin | Update book |
-| `DELETE` | `/api/books/:id` | Admin | Soft delete |
-| `POST` | `/api/borrow` | Auth | Borrow a book |
-| `PATCH` | `/api/borrow/:id/return` | Auth | Return a book |
-| `GET` | `/api/borrow/history` | Auth | Member borrow history |
-| `GET` | `/api/admin/borrows` | Admin | All borrows |
-| `GET` | `/api/admin/users` | Admin | All users |
-| `PATCH` | `/api/admin/users/:id/role` | Admin | Update user role |
-| `POST` | `/api/chat` | Auth | AI librarian chat |
-| `POST` | `/api/auth/register` | Public | Register user |
+| `GET` | `/api/auth/me` | any | Current user profile |
+| `GET` | `/api/books` | any | Paginated book list with search/genre/status filters |
+| `GET` | `/api/books/:id` | any | Single book by ID |
+| `POST` | `/api/books` | admin, librarian | Create book (generates AI embedding) |
+| `PATCH` | `/api/books/:id` | admin, librarian | Update book |
+| `DELETE` | `/api/books/:id` | admin | Soft delete |
+| `POST` | `/api/books/semantic-search` | any | AI semantic search `{ query, limit }` |
+| `POST` | `/api/borrow/:bookId` | member | Borrow a book |
+| `POST` | `/api/borrow/return/:borrowId` | member, admin, librarian | Return a book |
+| `GET` | `/api/borrow/history` | member, admin, librarian | Own borrow history |
+| `GET` | `/api/admin/borrow` | admin, librarian | All borrow records with filters |
+| `GET` | `/api/admin/users` | admin | List all users |
+| `PATCH` | `/api/admin/users/:id/role` | admin | Update user role |
+| `PATCH` | `/api/admin/users/:id/status` | admin | Activate / deactivate user |
+| `POST` | `/api/chat` | any | AI librarian chat `{ message }` |
+| `GET` | `/health` | public | Health check (DB, uptime, memory) |
+
+Full Postman collection: [`postman/`](postman/)
 
 ---
 
 ## Running Locally
 
 ### Prerequisites
-- Node.js 20+
-- MongoDB 7 running as a replica set (`--replSet rs0`) **or** Docker + Docker Compose
+- **Node.js 20+**
+- **MongoDB 7** running as a replica set — or **Docker + Docker Compose**
 
 ### Option A — Docker Compose (recommended)
 
 ```bash
-# 1. Clone
-git clone https://github.com/your-username/lexora.git
-cd lexora/backend
-
-# 2. Copy env and fill values
-cp .env.example .env
-
-# 3. Start (API + MongoDB replica set)
-docker-compose up --build
+git clone https://github.com/Mhmdomarissa/mini-library-system.git
+cd mini-library-system/backend
+cp .env.example .env        # fill in your values (see table below)
+docker compose up --build    # starts API + MongoDB replica set
 ```
 
-The API will be available at `http://localhost:4000`.
+API → `http://localhost:4000`
 
 ### Option B — Manual
 
 ```bash
-# Terminal 1 — start MongoDB as replica set
-mongod --replSet rs0 --port 27017
-# In mongosh: rs.initiate()
+# Terminal 1 — MongoDB as replica set
+mongod --replSet rs0 --dbpath /tmp/mongodb-rs0 --port 27017 &
+sleep 2 && mongosh --eval "rs.initiate()"
 
-# Terminal 2 — backend
+# Terminal 2 — Backend
 cd backend
-cp .env.example .env   # fill in your values
-npm install
-npm run dev            # ts-node with nodemon
+cp .env.example .env    # fill in your values
+npm install && npm run dev
 
-# Terminal 3 — frontend
+# Terminal 3 — Frontend
 cd frontend
-cp .env.example .env.local   # fill in your values
-npm install
-npm run dev            # http://localhost:3000
+cp .env.example .env.local    # fill in your values
+npm install && npm run dev    # → http://localhost:3000
 ```
 
 ---
@@ -194,18 +172,18 @@ npm run dev            # http://localhost:3000
 
 | Variable | Required | Description |
 |---|---|---|
-| `PORT` | No | HTTP port (default: 4000) |
+| `PORT` | No | HTTP port (default: `4000`) |
 | `NODE_ENV` | Yes | `development` or `production` |
-| `MONGODB_URI` | Yes | MongoDB connection string (must be replica set) |
+| `MONGODB_URI` | Yes | MongoDB connection string (must be a replica set) |
 | `FIREBASE_PROJECT_ID` | Yes | Firebase project ID |
 | `FIREBASE_CLIENT_EMAIL` | Yes | Firebase service account email |
-| `FIREBASE_PRIVATE_KEY` | Yes | Firebase service account private key |
+| `FIREBASE_PRIVATE_KEY` | Yes | Firebase service account private key (PEM format) |
 | `OPENAI_API_KEY` | Yes | OpenAI API key for embeddings + chat |
-| `ALLOWED_ORIGINS` | Prod | Comma-separated CORS origins |
-| `BORROW_DURATION_DAYS` | No | Loan period in days (default: 14) |
-| `MAX_ACTIVE_BORROWS` | No | Max concurrent borrows per member (default: 5) |
-| `FINE_PER_DAY` | No | Daily overdue fine in USD (default: 1.00) |
-| `LOG_LEVEL` | No | Winston log level (default: info) |
+| `ALLOWED_ORIGINS` | Prod | Comma-separated CORS origins (must be set in production) |
+| `BORROW_DURATION_DAYS` | No | Loan period in days (default: `14`) |
+| `MAX_ACTIVE_BORROWS` | No | Max concurrent borrows per member (default: `5`) |
+| `FINE_PER_DAY` | No | Daily overdue fine in USD (default: `1.00`) |
+| `LOG_LEVEL` | No | Winston log level (default: `info`) |
 
 ### Frontend (`frontend/.env.local`)
 
@@ -217,59 +195,98 @@ npm run dev            # http://localhost:3000
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Yes | Firebase project ID |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | Yes | Firebase web app ID |
 
+> **Note:** No secrets are committed to this repository. Copy the `.env.example` files and fill in your own credentials.
+
+---
+
+## Testing with Postman
+
+1. Import `postman/mini-library-system.postman_collection.json` into Postman
+2. Import `postman/mini-library-system.postman_environment.json` (local) or `postman/mini-library-system.postman_environment.production.json` (production)
+3. Fill in the `firebase_api_key` and password placeholders in the environment
+4. The collection includes a **pre-request script** that automatically authenticates with Firebase and sets the Bearer token
+5. Run the collection or individual requests
+
+---
+
+## Design Decisions
+
+| Decision | Why |
+|---|---|
+| **ACID transactions for borrows** | A borrow involves 3 writes (check → decrement → create record). Without a transaction, concurrent requests can both read `availableCopies = 1` and both succeed, leaving the count at -1. The borrow limit check is also inside the transaction to prevent TOCTOU bugs. |
+| **Cosine similarity in-memory** | At library scale (thousands of books), full in-memory cosine similarity over stored embedding vectors takes single-digit milliseconds. No vector database needed — simpler ops, same result. |
+| **RAG chatbot** | Injecting real catalogue + borrow data as context means the model answers with actual book titles and availability, not hallucinations. |
+| **Partial unique index on ISBN** | `{ isbn: 1, unique: true, partialFilterExpression: { isDeleted: false } }` — allows re-adding a previously deleted book while still enforcing uniqueness for active books. |
+| **Firebase Auth (not custom JWT)** | Offloads token issuance, refresh, and revocation. Backend verifies tokens via Admin SDK in one middleware line. Eliminates the attack surface of home-grown JWT handling. |
+| **Fines computed dynamically** | Never stored in DB. Derived from `dueDate` + `FINE_PER_DAY` on every read. No stale data, no background job, policy changes apply instantly. |
+
+---
+
+## Security
+
+- **No secrets in git** — `.env` files are gitignored; Postman environments use `<YOUR_...>` placeholders
+- **Firebase Admin SDK** — every request is token-verified server-side
+- **Helmet** — security headers (HSTS, CSP, X-Frame-Options, noSniff)
+- **CORS** — origin whitelist via `ALLOWED_ORIGINS` env var
+- **Rate limiting** — per-IP via `express-rate-limit`, with stricter limits on borrow and chat endpoints
+- **Soft deletes** — records are never physically removed; `isDeleted: false` is enforced at the repository layer
+- **Embedding vectors never exposed** — `select: false` on the field + explicit strip in the service layer
+- **No credential logging** — API keys and Firebase private keys are never written to any log sink
+- **Role hardcoded to `member`** — new users can never self-assign elevated roles; the backend ignores any role from the client
+
 ---
 
 ## Deployment
 
 ### Backend → Railway
-
-1. Connect Railway to this repository
-2. Set the root directory to `backend/`
-3. Railway auto-detects Node.js and runs `npm run build && npm start`
-4. Add all environment variables via Railway dashboard
-5. Set `NODE_ENV=production` and `ALLOWED_ORIGINS=https://your-frontend.vercel.app`
-6. Use **MongoDB Atlas** for the database (set `MONGODB_URI` to the Atlas connection string)
+1. Connect Railway to the repo, set root directory to `backend/`
+2. Railway auto-detects Node.js → runs `npm run build && npm start`
+3. Add all env vars in the Railway dashboard
+4. Set `NODE_ENV=production` and `ALLOWED_ORIGINS=https://mini-library-system.vercel.app`
+5. Use **MongoDB Atlas** for the database (Atlas handles replica set internally)
 
 ### Frontend → Vercel
-
-1. Connect Vercel to this repository
-2. Set the root directory to `frontend/`
-3. Add all `NEXT_PUBLIC_*` environment variables in the Vercel dashboard
-4. Deploy
+1. Connect Vercel to the repo, set root directory to `frontend/`
+2. Add all `NEXT_PUBLIC_*` env vars in Vercel dashboard
+3. Deploy — Vercel detects Next.js automatically
 
 ---
 
 ## Project Structure
 
 ```
-.
-├── backend/          Node.js / Express API
+├── backend/              Node.js / Express API
 │   ├── src/
-│   │   ├── controllers/
-│   │   ├── services/
-│   │   ├── repositories/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── middleware/
-│   │   ├── utils/
-│   │   └── config/
+│   │   ├── controllers/    HTTP handlers (thin)
+│   │   ├── services/       Business logic
+│   │   ├── repositories/   Database access
+│   │   ├── models/         Mongoose schemas
+│   │   ├── routes/         Express routers
+│   │   ├── middleware/     Auth, rate limit, validation, logging
+│   │   └── utils/         AppError, pagination, response helpers
 │   ├── Dockerfile
-│   ├── docker-compose.yml
-│   └── README.md      ← detailed backend docs
-├── frontend/          Next.js App Router
-│   ├── app/           pages + layouts
-│   ├── components/    layout · shared · ui · rareui
-│   ├── features/      books · borrow · auth · admin · chat
-│   ├── lib/           api client · firebase · env
+│   └── docker-compose.yml
+├── frontend/             Next.js App Router
+│   ├── app/              Pages + layouts
+│   ├── components/       layout / shared / ui / rareui
+│   ├── features/         books / borrow / auth / admin / chat
+│   ├── lib/              API client, Firebase, env
 │   └── types/
-├── docs/              requirements · DB design · API contract
-└── postman/           Postman collection + environments
+├── docs/                 Requirements, DB design, security, API contract
+└── postman/              Collection + environments (local + production)
 ```
 
 ---
 
-## Repository
+## How AI Tools Were Used
 
-- **Backend detailed docs:** [backend/README.md](backend/README.md)
-- **API Contract:** [docs/06-api-contract.md](docs/06-api-contract.md)
-- **DB Design:** [docs/03-database-design.md](docs/03-database-design.md)
+This project was developed with the assistance of **GitHub Copilot** for code completion, refactoring suggestions, and documentation drafting. All generated code was reviewed, tested, and edited to ensure correctness and adherence to the project's architectural decisions. The AI features (semantic search, RAG chatbot) are powered by the OpenAI API at runtime.
+
+---
+
+## Further Documentation
+
+- [Backend README](backend/README.md) — deep-dive into architecture, borrow transactions, fine calculation, semantic search
+- [API Contract](docs/06-api-contract.md)
+- [Database Design](docs/03-database-design.md)
+- [Security Policy](docs/04-security.md)

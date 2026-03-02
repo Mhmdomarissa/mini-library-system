@@ -1,4 +1,4 @@
-# Mini Library System — Backend
+# Lexora — Backend
 
 A production-grade RESTful API for a library management system built with **Node.js**, **TypeScript**, **Express**, **MongoDB** (Mongoose), **Firebase Auth**, and **OpenAI** embeddings.
 
