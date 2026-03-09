@@ -21,6 +21,12 @@ export interface IBook extends Document {
   updatedAt: Date;
   /** OpenAI text-embedding-3-small vector (1536-dim). Excluded from all standard queries via select:false. */
   embedding?: number[];
+  /** GridFS ObjectId of the associated file (PDF/HTML). */
+  fileId?: Types.ObjectId;
+  /** Original filename of the uploaded file. */
+  fileName?: string;
+  /** MIME type of the uploaded file (application/pdf | text/html). */
+  fileMimeType?: string;
 }
 
 const bookSchema = new Schema<IBook>(
@@ -46,6 +52,13 @@ const bookSchema = new Schema<IBook>(
     // Not indexed — cosine similarity is computed in-memory in the service.
     // Not required — existing books may lack an embedding until regenerated.
     embedding: { type: [Number], required: false, select: false },
+    // ── Associated file (PDF / HTML) ──────────────────────────────────────
+    // Stored in GridFS (bookFiles bucket). Only the reference is kept here.
+    // fileId is the GridFS ObjectId, fileName the original name, fileMimeType
+    // the validated MIME type. All optional — books can exist without a file.
+    fileId: { type: Schema.Types.ObjectId, required: false },
+    fileName: { type: String, required: false },
+    fileMimeType: { type: String, required: false },
   },
   { timestamps: true },
 );

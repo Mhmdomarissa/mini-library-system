@@ -1,4 +1,5 @@
 import type { Types, FlattenMaps } from 'mongoose';
+import mongoose from 'mongoose';
 import { bookRepository } from '../repositories/book.repository';
 import type { BookFilters } from '../repositories/book.repository';
 import type { IBook } from '../models/Book';
@@ -7,6 +8,14 @@ import type { PaginationParams, PaginatedResult } from '../utils/pagination';
 import { AppError } from '../utils/AppError';
 import { generateEmbedding, buildEmbeddingInput } from './embedding.service';
 import { cosineSimilarity } from '../utils/cosineSimilarity';
+import { storageService } from './storage.service';
+
+/** File payload passed from the controller after multer processing. */
+export interface FilePayload {
+  buffer: Buffer;
+  originalname: string;
+  mimetype: string;
+}
 
 /** Book lean document with embedding guaranteed present (after filter). */
 type BookWithEmbedding = FlattenMaps<IBook> & { embedding: number[] };
@@ -26,8 +35,14 @@ export class BookService {
    * Embedding is generated BEFORE the DB write so a failed OpenAI call
    * cannot leave a book without an embedding.
    * availableCopies is derived from totalCopies — never trusted from input.
+   *
+   * If a file is provided, it is uploaded to GridFS and linked to the book.
    */
-  async create(data: CreateBookInput, createdBy: Types.ObjectId): Promise<IBook> {
+  async create(
+    data: CreateBookInput,
+    createdBy: Types.ObjectId,
+    file?: FilePayload,
+  ): Promise<IBook> {
     const existing = await bookRepository.findByIsbn(data.isbn);
     if (existing) {
       throw AppError.conflict(`A book with ISBN "${data.isbn}" already exists`);
@@ -38,7 +53,27 @@ export class BookService {
     const embeddingInput = buildEmbeddingInput(data.title, data.author, data.description ?? '');
     const embedding = await generateEmbedding(embeddingInput);
 
-    return bookRepository.create(data, createdBy, embedding);
+    // Upload file to GridFS if provided
+    let fileFields = {};
+    if (file) {
+      const fileId = await storageService.upload(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        'pending', // bookId not yet known — will be set via metadata
+      );
+      fileFields = {
+        fileId,
+        fileName: file.originalname,
+        fileMimeType: file.mimetype,
+      };
+    }
+
+    return bookRepository.create(
+      { ...data, ...fileFields } as CreateBookInput,
+      createdBy,
+      embedding,
+    );
   }
 
   /**
@@ -67,8 +102,14 @@ export class BookService {
    * - If totalCopies decreases below availableCopies, cap availableCopies
    * - Embedding is regenerated ONLY when title, author, or description change.
    *   Unrelated field updates (genre, totalCopies, …) never call OpenAI.
+   * - If a new file is provided, the old file is deleted from GridFS.
    */
-  async update(id: string, data: UpdateBookInput, updatedBy: Types.ObjectId): Promise<IBook> {
+  async update(
+    id: string,
+    data: UpdateBookInput,
+    updatedBy: Types.ObjectId,
+    file?: FilePayload,
+  ): Promise<IBook> {
     const book = await bookRepository.findById(id);
     if (!book) {
       throw AppError.notFound('Book not found');
@@ -101,8 +142,24 @@ export class BookService {
       embedding = await generateEmbedding(embeddingInput);
     }
 
+    // Handle file upload — upload new file and delete old one
+    let fileFields: Record<string, unknown> = {};
+    if (file) {
+      const fileId = await storageService.upload(file.buffer, file.originalname, file.mimetype, id);
+      fileFields = {
+        fileId,
+        fileName: file.originalname,
+        fileMimeType: file.mimetype,
+      };
+      // Delete old file from GridFS if one existed
+      if (book.fileId) {
+        await storageService.delete(new mongoose.Types.ObjectId(String(book.fileId)));
+      }
+    }
+
     const updated = await bookRepository.updateById(id, {
       ...data,
+      ...fileFields,
       ...(safeAvailable !== currentAvailable && { availableCopies: safeAvailable }),
       ...(embedding && { embedding }),
       updatedBy,
@@ -163,12 +220,73 @@ export class BookService {
   /**
    * Soft-delete a book.
    * Throws 404 if the book does not exist or is already deleted.
+   * Also deletes the associated file from GridFS if one exists.
    */
   async softDelete(id: string, deletedBy: Types.ObjectId): Promise<void> {
+    // Fetch the book first to get the fileId for cleanup
+    const book = await bookRepository.findById(id);
+    if (!book) {
+      throw AppError.notFound('Book not found');
+    }
+
     const deleted = await bookRepository.softDelete(id, deletedBy);
     if (!deleted) {
       throw AppError.notFound('Book not found');
     }
+
+    // Clean up GridFS file after successful soft-delete
+    if (book.fileId) {
+      await storageService.delete(new mongoose.Types.ObjectId(String(book.fileId)));
+    }
+  }
+
+  /**
+   * Download the file associated with a book.
+   * Returns a readable stream with filename and content type.
+   * Throws 404 if the book or file does not exist.
+   */
+  async downloadFile(bookId: string): Promise<{
+    stream: NodeJS.ReadableStream;
+    filename: string;
+    contentType: string;
+  }> {
+    const book = await bookRepository.findById(bookId);
+    if (!book) {
+      throw AppError.notFound('Book not found');
+    }
+    if (!book.fileId) {
+      throw AppError.notFound('No file associated with this book');
+    }
+    return storageService.download(new mongoose.Types.ObjectId(String(book.fileId)));
+  }
+
+  /**
+   * Delete the file associated with a book without deleting the book itself.
+   * Used when an admin wants to remove the file from an existing book.
+   */
+  async deleteFile(bookId: string, updatedBy: Types.ObjectId): Promise<IBook> {
+    const book = await bookRepository.findById(bookId);
+    if (!book) {
+      throw AppError.notFound('Book not found');
+    }
+    if (!book.fileId) {
+      throw AppError.notFound('No file associated with this book');
+    }
+
+    await storageService.delete(new mongoose.Types.ObjectId(String(book.fileId)));
+
+    const updated = await bookRepository.updateById(bookId, {
+      fileId: undefined,
+      fileName: undefined,
+      fileMimeType: undefined,
+      updatedBy,
+    } as unknown as Parameters<typeof bookRepository.updateById>[1]);
+
+    if (!updated) {
+      throw AppError.notFound('Book not found');
+    }
+
+    return updated;
   }
 }
 

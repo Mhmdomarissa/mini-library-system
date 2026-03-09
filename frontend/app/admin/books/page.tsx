@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, FileText, Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -43,9 +43,10 @@ import {
   PaginationControls,
   ConfirmDialog,
 } from '@/components/shared';
-import { useBooks, useCreateBook, useUpdateBook, useDeleteBook } from '@/features/books';
+import { useBooks, useCreateBook, useUpdateBook, useDeleteBook, useDeleteBookFile } from '@/features/books';
 import { useAuth } from '@/features/auth';
 import { useDebounce } from '@/hooks/useDebounce';
+import { env } from '@/lib/env';
 import type { Book, CreateBookPayload, UpdateBookPayload } from '@/types';
 
 const bookSchema = z.object({
@@ -62,6 +63,10 @@ type BookFormValues = z.infer<typeof bookSchema>;
 
 // ── Book Form Dialog ─────────────────────────────────────────────────────────
 
+const ACCEPTED_FILE_TYPES = '.pdf,.html,.htm';
+const MAX_FILE_SIZE_MB = 50;
+const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 function BookFormDialog({
   open,
   onOpenChange,
@@ -73,7 +78,10 @@ function BookFormDialog({
 }) {
   const createBook = useCreateBook();
   const updateBook = useUpdateBook(editingBook?._id ?? '');
+  const deleteBookFile = useDeleteBookFile();
   const isEditing = Boolean(editingBook);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zod v4 + @hookform/resolvers type mismatch
   const form = useForm<BookFormValues>({
@@ -112,18 +120,52 @@ function BookFormDialog({
         description: '',
       });
     }
+    // Clear selected file when dialog opens
+    setSelectedFile(null);
   }, [open, editingBook, form]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error(`File too large. Maximum size is ${MAX_FILE_SIZE_MB} MB.`);
+      e.target.value = '';
+      return;
+    }
+
+    const allowed = ['application/pdf', 'text/html'];
+    if (!allowed.includes(file.type)) {
+      toast.error('Only PDF and HTML files are allowed.');
+      e.target.value = '';
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const handleRemoveExistingFile = async () => {
+    if (!editingBook?.fileId) return;
+    try {
+      await deleteBookFile.mutateAsync(editingBook._id);
+      toast.success('File removed.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to remove file.';
+      toast.error(message);
+    }
+  };
 
   const onSubmit: SubmitHandler<BookFormValues> = async (values) => {
     try {
       if (isEditing) {
-        await updateBook.mutateAsync(values as UpdateBookPayload);
+        await updateBook.mutateAsync({ payload: values as UpdateBookPayload, file: selectedFile ?? undefined });
         toast.success('Book updated successfully!');
       } else {
-        await createBook.mutateAsync(values as CreateBookPayload);
+        await createBook.mutateAsync({ payload: values as CreateBookPayload, file: selectedFile ?? undefined });
         toast.success('Book created successfully!');
       }
       form.reset();
+      setSelectedFile(null);
       onOpenChange(false);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : `Failed to ${isEditing ? 'update' : 'create'} book.`;
@@ -200,6 +242,85 @@ function BookFormDialog({
                 )}
               />
             </div>
+
+            {/* ── File Upload Section ────────────────────────────────────── */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">
+                Book File <span className="text-muted-foreground">(optional)</span>
+              </label>
+
+              {/* Show existing file if editing a book that has one */}
+              {isEditing && editingBook?.fileId && !selectedFile && (
+                <div className="flex items-center justify-between rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FileText className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="truncate">{editingBook.fileName}</span>
+                    <Badge variant="secondary" className="text-[10px]">
+                      {editingBook.fileMimeType === 'application/pdf' ? 'PDF' : 'HTML'}
+                    </Badge>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="shrink-0 text-destructive hover:text-destructive"
+                    onClick={handleRemoveExistingFile}
+                    disabled={deleteBookFile.isPending}
+                    title="Remove file"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Show selected new file */}
+              {selectedFile && (
+                <div className="flex items-center justify-between rounded-md border bg-primary/5 px-3 py-2 text-sm">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Upload className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="truncate">{selectedFile.name}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      ({(selectedFile.size / 1024 / 1024).toFixed(1)} MB)
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => { setSelectedFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                    title="Remove selection"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
+
+              {/* File input — hidden, triggered by button */}
+              {!selectedFile && (
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ACCEPTED_FILE_TYPES}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="mr-1.5 h-3.5 w-3.5" />
+                    {isEditing && editingBook?.fileId ? 'Replace File' : 'Upload PDF or HTML'}
+                  </Button>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    PDF or HTML, max {MAX_FILE_SIZE_MB} MB
+                  </p>
+                </div>
+              )}
+            </div>
+
             <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
               {form.formState.isSubmitting
                 ? (isEditing ? 'Updating…' : 'Creating…')
@@ -333,6 +454,7 @@ export default function AdminBooksPage() {
                   <TableHead className="text-center">Copies</TableHead>
                   <TableHead className="text-center">Available</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>File</TableHead>
                   <TableHead />
                 </TableRow>
               </TableHeader>
@@ -362,6 +484,21 @@ export default function AdminBooksPage() {
                       <Badge variant={statusVariant(book.status)}>
                         {book.status.replace('_', ' ')}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {book.fileId ? (
+                        <a
+                          href={`${env.apiUrl}/api/books/${book._id}/file`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        >
+                          <FileText className="h-3.5 w-3.5" />
+                          {book.fileMimeType === 'application/pdf' ? 'PDF' : 'HTML'}
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">

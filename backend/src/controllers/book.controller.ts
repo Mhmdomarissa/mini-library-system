@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { bookService } from '../services/book.service';
+import type { FilePayload } from '../services/book.service';
 import type {
   CreateBookInput,
   UpdateBookInput,
@@ -16,9 +17,40 @@ import type { BookFilters } from '../repositories/book.repository';
  * Each method is a plain async function — wrapped with asyncHandler in routes.
  */
 
+/**
+ * Extract a FilePayload from the multer-processed request, if present.
+ */
+function extractFile(req: Request): FilePayload | undefined {
+  const file = (req as unknown as { file?: Express.Multer.File }).file;
+  if (!file) return undefined;
+  return {
+    buffer: file.buffer,
+    originalname: file.originalname,
+    mimetype: file.mimetype,
+  };
+}
+
+/**
+ * Parse multipart/form-data body fields.
+ * When using multer, text fields arrive as strings.
+ * Numeric fields need to be coerced explicitly.
+ */
+function parseBookBody(body: Record<string, unknown>): CreateBookInput {
+  return {
+    title: String(body.title ?? ''),
+    author: String(body.author ?? ''),
+    isbn: String(body.isbn ?? ''),
+    genre: String(body.genre ?? ''),
+    description: body.description ? String(body.description) : '',
+    publishedYear: Number(body.publishedYear),
+    totalCopies: Number(body.totalCopies),
+  } as CreateBookInput;
+}
+
 export const create = async (req: Request, res: Response): Promise<void> => {
-  const body = req.body as CreateBookInput;
-  const book = await bookService.create(body, req.user!._id);
+  const body = parseBookBody(req.body as Record<string, unknown>);
+  const file = extractFile(req);
+  const book = await bookService.create(body, req.user!._id, file);
   sendCreated(res, { book });
 };
 
@@ -49,8 +81,19 @@ export const getById = async (req: Request, res: Response): Promise<void> => {
 
 export const update = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params as { id: string };
-  const body = req.body as UpdateBookInput;
-  const book = await bookService.update(id, body, req.user!._id);
+  // When multer is active, body fields are strings. Parse numeric fields.
+  const raw = req.body as Record<string, unknown>;
+  const body: UpdateBookInput = {};
+  if (raw.title !== undefined) body.title = String(raw.title);
+  if (raw.author !== undefined) body.author = String(raw.author);
+  if (raw.isbn !== undefined) body.isbn = String(raw.isbn);
+  if (raw.genre !== undefined) body.genre = String(raw.genre);
+  if (raw.description !== undefined) body.description = String(raw.description);
+  if (raw.publishedYear !== undefined) body.publishedYear = Number(raw.publishedYear);
+  if (raw.totalCopies !== undefined) body.totalCopies = Number(raw.totalCopies);
+
+  const file = extractFile(req);
+  const book = await bookService.update(id, body, req.user!._id, file);
   sendSuccess(res, { book });
 };
 
@@ -73,4 +116,32 @@ export const semanticSearch = async (req: Request, res: Response): Promise<void>
   const { query, limit } = req.body as SemanticSearchInput;
   const books = await bookService.semanticSearch(query, limit);
   sendSuccess(res, books);
+};
+
+/**
+ * GET /api/books/:id/file
+ * Download the file (PDF/HTML) associated with a book.
+ * Streams the file directly from GridFS — no temp files.
+ */
+export const downloadFile = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params as { id: string };
+  const { stream, filename, contentType } = await bookService.downloadFile(id);
+
+  res.set({
+    'Content-Type': contentType,
+    'Content-Disposition': `inline; filename="${encodeURIComponent(filename)}"`,
+  });
+
+  (stream as NodeJS.ReadableStream).pipe(res);
+};
+
+/**
+ * DELETE /api/books/:id/file
+ * Remove the file associated with a book (admin/librarian only).
+ * Does NOT delete the book itself.
+ */
+export const deleteFile = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params as { id: string };
+  const book = await bookService.deleteFile(id, req.user!._id);
+  sendSuccess(res, { book });
 };

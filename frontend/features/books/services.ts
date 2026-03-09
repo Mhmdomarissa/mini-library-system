@@ -20,6 +20,24 @@ function buildQS(params: Record<string, string | number | undefined>): string {
   return '?' + entries.map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`).join('&');
 }
 
+/**
+ * Build a FormData instance from book payload + optional file.
+ * Used for create and update — sends multipart/form-data so the
+ * backend multer middleware can extract both text fields and the file.
+ */
+function buildFormData(payload: Record<string, unknown>, file?: File): FormData {
+  const fd = new FormData();
+  for (const [key, value] of Object.entries(payload)) {
+    if (value !== undefined && value !== null) {
+      fd.append(key, String(value));
+    }
+  }
+  if (file) {
+    fd.append('file', file);
+  }
+  return fd;
+}
+
 export const bookService = {
   getAll: (query: BookQuery = {}): Promise<PaginatedResponse<Book>> =>
     api.get(`/api/books${buildQS(query as Record<string, string | number | undefined>)}`),
@@ -31,11 +49,14 @@ export const bookService = {
   semanticSearch: (q: string, limit = 10): Promise<Book[]> =>
     api.post('/api/books/semantic-search', { query: q, limit }),
 
-  create: (payload: CreateBookPayload): Promise<Book> =>
-    api.post<{ book: Book }>('/api/books', payload).then((r) => r.book),
+  create: (payload: CreateBookPayload, file?: File): Promise<Book> =>
+    api.postForm<{ book: Book }>('/api/books', buildFormData(payload as unknown as Record<string, unknown>, file)).then((r) => r.book),
 
-  update: (id: string, payload: UpdateBookPayload): Promise<Book> =>
-    api.patch<{ book: Book }>(`/api/books/${id}`, payload).then((r) => r.book),
+  update: (id: string, payload: UpdateBookPayload, file?: File): Promise<Book> =>
+    api.patchForm<{ book: Book }>(`/api/books/${id}`, buildFormData(payload as unknown as Record<string, unknown>, file)).then((r) => r.book),
 
   delete: (id: string): Promise<void> => api.delete(`/api/books/${id}`),
+
+  deleteFile: (id: string): Promise<Book> =>
+    api.delete<{ book: Book }>(`/api/books/${id}/file`).then((r) => r.book),
 };

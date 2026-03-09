@@ -28,6 +28,12 @@ export interface Book {
   status: 'available' | 'out_of_stock' | 'archived';
   isDeleted?: boolean;
   deletedAt?: string;
+  /** GridFS file ID — present when a PDF/HTML file is attached */
+  fileId?: string;
+  /** Original filename of the uploaded file */
+  fileName?: string;
+  /** MIME type: 'application/pdf' | 'text/html' */
+  fileMimeType?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Sparkles, AlertTriangle, Search, Loader2 } from 'lucide-react';
+import { Sparkles, AlertTriangle, Search, Loader2, FileText } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ import { useBorrowBook } from '@/features/borrow';
 import { useAuth } from '@/features/auth';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ApiError } from '@/lib/api';
+import { env } from '@/lib/env';
 
 const GENRE_FILTERS = ['All', 'Fiction', 'Non-Fiction', 'Science', 'History', 'Fantasy', 'Romance', 'Technology', 'Philosophy', 'Biography'] as const;
 
@@ -187,6 +188,19 @@ export default function DashboardPage() {
                         ? `${book.availableCopies} avail.`
                         : 'Unavailable'}
                     </Badge>
+                    {book.fileId && (
+                      <a
+                        href={`${env.apiUrl}/api/books/${book._id}/file`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Badge variant="outline" className="cursor-pointer gap-1 hover:bg-accent">
+                          <FileText className="h-3 w-3" />
+                          {book.fileMimeType === 'application/pdf' ? 'PDF' : 'HTML'}
+                        </Badge>
+                      </a>
+                    )}
                   </div>
                   {role === 'member' ? (
                     <Button
