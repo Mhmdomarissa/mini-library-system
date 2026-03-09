@@ -103,6 +103,27 @@ export const api = {
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
 
   /**
+   * Fetch a file as a Blob with authentication.
+   * Used for downloading protected files (e.g. book PDFs).
+   */
+  getBlob: async (path: string): Promise<Blob> => {
+    const token = await getToken();
+    const headers: HeadersInit = {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+    const res = await fetch(`${env.apiUrl}${path}`, { headers });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new ApiError(
+        body.message ?? `Request failed (${res.status})`,
+        res.status,
+        body.errors,
+      );
+    }
+    return res.blob();
+  },
+
+  /**
    * POST with FormData (multipart/form-data).
    * Used for file uploads — Content-Type is set automatically by the browser
    * so we must NOT override it with 'application/json'.

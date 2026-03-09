@@ -44,9 +44,9 @@ import {
   ConfirmDialog,
 } from '@/components/shared';
 import { useBooks, useCreateBook, useUpdateBook, useDeleteBook, useDeleteBookFile } from '@/features/books';
+import { bookService } from '@/features/books/services';
 import { useAuth } from '@/features/auth';
 import { useDebounce } from '@/hooks/useDebounce';
-import { env } from '@/lib/env';
 import type { Book, CreateBookPayload, UpdateBookPayload } from '@/types';
 
 const bookSchema = z.object({
@@ -487,15 +487,14 @@ export default function AdminBooksPage() {
                     </TableCell>
                     <TableCell>
                       {book.fileId ? (
-                        <a
-                          href={`${env.apiUrl}/api/books/${book._id}/file`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => bookService.openFile(book._id).catch(() => toast.error('Failed to open file'))}
                           className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                         >
                           <FileText className="h-3.5 w-3.5" />
                           {book.fileMimeType === 'application/pdf' ? 'PDF' : 'HTML'}
-                        </a>
+                        </button>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}

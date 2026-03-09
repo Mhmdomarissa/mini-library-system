@@ -59,4 +59,16 @@ export const bookService = {
 
   deleteFile: (id: string): Promise<Book> =>
     api.delete<{ book: Book }>(`/api/books/${id}/file`).then((r) => r.book),
+
+  /**
+   * Download a book's file with authentication and open it in a new tab.
+   * Creates a temporary blob URL so the browser can display the PDF/HTML.
+   */
+  openFile: async (bookId: string): Promise<void> => {
+    const blob = await api.getBlob(`/api/books/${bookId}/file`);
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    // Revoke after a short delay so the browser has time to load it
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  },
 };

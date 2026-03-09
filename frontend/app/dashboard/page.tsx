@@ -18,11 +18,11 @@ import {
   PaginationControls,
 } from '@/components/shared';
 import { useBooks, useSemanticSearch } from '@/features/books';
+import { bookService } from '@/features/books/services';
 import { useBorrowBook } from '@/features/borrow';
 import { useAuth } from '@/features/auth';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ApiError } from '@/lib/api';
-import { env } from '@/lib/env';
 
 const GENRE_FILTERS = ['All', 'Fiction', 'Non-Fiction', 'Science', 'History', 'Fantasy', 'Romance', 'Technology', 'Philosophy', 'Biography'] as const;
 
@@ -189,17 +189,18 @@ export default function DashboardPage() {
                         : 'Unavailable'}
                     </Badge>
                     {book.fileId && (
-                      <a
-                        href={`${env.apiUrl}/api/books/${book._id}/file`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          bookService.openFile(book._id).catch(() => toast.error('Failed to open file'));
+                        }}
                       >
                         <Badge variant="outline" className="cursor-pointer gap-1 hover:bg-accent">
                           <FileText className="h-3 w-3" />
                           {book.fileMimeType === 'application/pdf' ? 'PDF' : 'HTML'}
                         </Badge>
-                      </a>
+                      </button>
                     )}
                   </div>
                   {role === 'member' ? (
