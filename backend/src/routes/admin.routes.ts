@@ -6,6 +6,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { updateUserRoleSchema, updateUserStatusSchema } from '../utils/validationSchemas';
 import * as borrowController from '../controllers/borrow.controller';
 import * as userController from '../controllers/user.controller';
+import * as seedController from '../controllers/seed.controller';
 
 const router = Router();
 
@@ -58,5 +59,14 @@ router.patch(
   validate(updateUserStatusSchema),
   asyncHandler(userController.toggleActive),
 );
+
+// ── Seed (admin only) ───────────────────────────────────────────────────────
+
+/**
+ * POST /api/admin/seed-books
+ * Role: admin
+ * Seed the database with sample books + HTML files. Idempotent — skips existing ISBNs.
+ */
+router.post('/seed-books', requireRole(['admin']), asyncHandler(seedController.seedBooks));
 
 export default router;

@@ -24,7 +24,7 @@ import { useAuth } from '@/features/auth';
 import { useDebounce } from '@/hooks/useDebounce';
 import { ApiError } from '@/lib/api';
 
-const GENRE_FILTERS = ['All', 'Fiction', 'Non-Fiction', 'Science', 'History', 'Fantasy', 'Romance', 'Technology', 'Philosophy', 'Biography'] as const;
+const GENRE_FILTERS = ['All', 'Fiction', 'Non-Fiction', 'Science', 'Science Fiction', 'Classic Literature', 'History', 'Fantasy', 'Romance', 'Technology', 'Philosophy', 'Biography'] as const;
 
 export default function DashboardPage() {
   const [search, setSearch] = useState('');
@@ -163,7 +163,15 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {displayBooks.map((book) => (
-              <Card key={book._id} className="group flex flex-col transition-all hover:-translate-y-0.5 hover:shadow-md">
+              <Card
+                key={book._id}
+                className={`group flex flex-col transition-all hover:-translate-y-0.5 hover:shadow-md${book.fileId ? ' cursor-pointer' : ''}`}
+                onClick={() => {
+                  if (book.fileId) {
+                    bookService.openFile(book._id).catch(() => toast.error('Failed to open file'));
+                  }
+                }}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -207,7 +215,7 @@ export default function DashboardPage() {
                     <Button
                       size="sm"
                       disabled={book.availableCopies === 0 || (borrowBook.isPending && borrowBook.variables === book._id)}
-                      onClick={() => handleBorrow(book._id)}
+                      onClick={(e) => { e.stopPropagation(); handleBorrow(book._id); }}
                     >
                       {borrowBook.isPending && borrowBook.variables === book._id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Borrow'}
                     </Button>
