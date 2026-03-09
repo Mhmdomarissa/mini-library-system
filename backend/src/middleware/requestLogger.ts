@@ -26,7 +26,10 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction): 
 
     const userId = req.user?.firebaseUid ?? 'anonymous';
     const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.ip ?? '-';
-    const { method, path: urlPath } = req;
+    const method = req.method;
+    // Use originalUrl so mounted-router paths appear in full (e.g. /api/books
+    // instead of just /) — req.path is relative to the router mount point.
+    const urlPath = req.originalUrl?.split('?')[0] ?? req.path;
     const { statusCode } = res;
 
     const meta = {
